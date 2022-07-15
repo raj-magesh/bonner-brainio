@@ -68,7 +68,9 @@ def fetch(
         class_=class_,
     )
     filepath = (
-        BRAINIO_HOME / catalog_name / Path(urlparse(metadata["location"].item()).path).name
+        BRAINIO_HOME
+        / catalog_name
+        / Path(urlparse(metadata["location"].item()).path).name
     )
     if not filepath.exists():
         _download(
@@ -123,7 +125,7 @@ def _upload(*, filepath: Path, location_type: str, url: str) -> None:
                 str(filepath),
                 url,
             ],
-            check=True
+            check=True,
         )
     else:
         raise NotImplementedError()
@@ -132,7 +134,9 @@ def _upload(*, filepath: Path, location_type: str, url: str) -> None:
 def _download(*, url: str, filepath: Path, location_type: str) -> None:
     if location_type == "network-storage":
         if not Path(filepath).exists():
-            subprocess.run(["rsync", "-vzhW", "--progress", url, str(filepath)], check=True)
+            subprocess.run(
+                ["rsync", "-vzhW", "--progress", url, str(filepath)], check=True
+            )
     else:
         raise NotImplementedError()
 

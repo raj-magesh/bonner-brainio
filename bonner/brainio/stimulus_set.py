@@ -19,12 +19,17 @@ def package(
     location: str,
 ) -> None:
 
-    assert all([lookup(
-        catalog_name=catalog_name,
-        identifier=identifier,
-        lookup_type="stimulus_set",
-        class_=filetype
-    ).empty for filetype in ("csv", "zip")]), f"stimulus_set {identifier} already exists in catalog {catalog_name}"
+    assert all(
+        [
+            lookup(
+                catalog_name=catalog_name,
+                identifier=identifier,
+                lookup_type="stimulus_set",
+                class_=filetype,
+            ).empty
+            for filetype in ("csv", "zip")
+        ]
+    ), f"stimulus_set {identifier} already exists in catalog {catalog_name}"
 
     _verify(stimulus_set=stimulus_set, stimulus_dir=stimulus_dir)
 
@@ -61,20 +66,29 @@ def _verify(*, stimulus_set: pd.DataFrame, stimulus_dir: Path) -> None:
     assert "filename" in stimulus_set.columns
     assert stimulus_set["stimulus_id"].is_unique
     assert all(
-        [re.match(r"^[a-zA-z0-9]+$", stimulus_id) for stimulus_id in stimulus_set["stimulus_id"]]
+        [
+            re.match(r"^[a-zA-z0-9]+$", stimulus_id)
+            for stimulus_id in stimulus_set["stimulus_id"]
+        ]
     )
     for filename in stimulus_set["filename"]:
         assert (stimulus_dir / filename).exists()
 
 
-def create_csv(*, identifier: str, stimulus_set: pd.DataFrame, catalog_name: str) -> Path:
+def create_csv(
+    *, identifier: str, stimulus_set: pd.DataFrame, catalog_name: str
+) -> Path:
     filepath = BRAINIO_HOME / catalog_name / f"{identifier}.csv"
     stimulus_set.to_csv(filepath, index=False)
     return filepath
 
 
 def create_zip(
-    *, identifier: str, stimulus_set: pd.DataFrame, stimulus_dir: Path, catalog_name: str
+    *,
+    identifier: str,
+    stimulus_set: pd.DataFrame,
+    stimulus_dir: Path,
+    catalog_name: str,
 ) -> Path:
     filepath_zip = BRAINIO_HOME / catalog_name / f"{identifier}.zip"
     with zipfile.ZipFile(filepath_zip, "w") as zip:

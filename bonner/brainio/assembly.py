@@ -19,7 +19,7 @@ def package(
         catalog_name=catalog_name,
         identifier=identifier,
         lookup_type="assembly",
-        class_="netcdf4"
+        class_="netcdf4",
     ).empty, f"assembly {identifier} already exists in catalog {catalog_name}"
 
     _verify(
@@ -67,7 +67,7 @@ def load(
     _verify(
         identifier=identifier,
         assembly=assembly,
-        stimulus_set_identifier=metadata["stimulus_set_identifier"].item()
+        stimulus_set_identifier=metadata["stimulus_set_identifier"].item(),
     )
 
     if merge_metadata:

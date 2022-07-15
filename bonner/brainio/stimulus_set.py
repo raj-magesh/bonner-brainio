@@ -1,7 +1,8 @@
 from typing import Tuple
 from pathlib import Path
-import re
+import shutil
 import zipfile
+import re
 
 import pandas as pd
 
@@ -23,7 +24,7 @@ def package(
         identifier=identifier,
         lookup_type="stimulus_set",
         class_=filetype
-    ).empty for filetype in ("csv", "zip")])
+    ).empty for filetype in ("csv", "zip")]), f"stimulus_set {identifier} already exists in catalog {catalog_name}"
 
     _verify(stimulus_set=stimulus_set, stimulus_dir=stimulus_dir)
 
@@ -78,8 +79,7 @@ def create_zip(
     filepath_zip = BRAINIO_HOME / catalog_name / f"{identifier}.zip"
     with zipfile.ZipFile(filepath_zip, "w") as zip:
         for filename in stimulus_set["filename"]:
-            filepath = stimulus_dir / filename
-            zip.write(filepath, arcname=str(filepath))
+            zip.write(stimulus_dir / filename, arcname=filename)
     return filepath_zip
 
 
@@ -100,8 +100,10 @@ def load(
     csv = pd.read_csv(filepaths["csv"])
 
     stimuli_dir = BRAINIO_HOME / catalog_name / f"{identifier}"
-    if not all([(stimuli_dir / subpath).exists() for subpath in csv["filenames"]]):
-        stimuli_dir.unlink()
+
+    if not all([(stimuli_dir / subpath).exists() for subpath in csv["filename"]]):
+        if stimuli_dir.exists():
+            shutil.rmtree(stimuli_dir)
         stimuli_dir.mkdir(parents=True)
         with zipfile.ZipFile(filepaths["zip"], "r") as f:
             f.extractall(stimuli_dir)

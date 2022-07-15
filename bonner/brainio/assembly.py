@@ -20,7 +20,7 @@ def package(
         identifier=identifier,
         lookup_type="assembly",
         class_="netcdf4"
-    ).empty
+    ).empty, f"assembly {identifier} already exists in catalog {catalog_name}"
 
     _verify(
         identifier=identifier,
@@ -67,16 +67,18 @@ def load(
     _verify(
         identifier=identifier,
         assembly=assembly,
-        stimulus_set_identifier=metadata["stimulus_set_identifier"]
+        stimulus_set_identifier=metadata["stimulus_set_identifier"].item()
     )
 
     if merge_metadata:
         assembly = assembly.load()
-        stimulus_set = load_stimulus_set(
-            metadata["stimulus_set_identifier"], check_integrity
+        stimulus_set, _ = load_stimulus_set(
+            catalog_name=catalog_name,
+            identifier=metadata["stimulus_set_identifier"].item(),
+            check_integrity=check_integrity,
         )
-        stimulus_set = stimulus_set[
-            stimulus_set["image_id"].isin(assembly["image_id"].values), :
+        stimulus_set = stimulus_set.loc[
+            stimulus_set["stimulus_id"].isin(assembly["stimulus_id"].values), :
         ]
         for column in stimulus_set.columns:
             if column == "stimulus_id" or column == "filename":

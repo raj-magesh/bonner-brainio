@@ -68,16 +68,16 @@ def fetch(
         class_=class_,
     )
     filepath = (
-        BRAINIO_HOME / catalog_name / Path(urlparse(metadata["location"]).path).name
+        BRAINIO_HOME / catalog_name / Path(urlparse(metadata["location"].item()).path).name
     )
     if not filepath.exists():
         _download(
-            url=metadata["location"],
+            url=metadata["location"].item(),
             filepath=filepath,
-            location_type=metadata["location_type"],
+            location_type=metadata["location_type"].item(),
         )
     if check_integrity:
-        assert metadata["sha1"] == _compute_sha1(filepath)
+        assert metadata["sha1"].item() == _compute_sha1(filepath)
     return filepath
 
 

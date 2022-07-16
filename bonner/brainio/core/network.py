@@ -11,7 +11,6 @@ from botocore.config import Config
 
 from .catalog import _lookup, _append
 from .utils import BRAINIO_HOME, _compute_sha1
-from .network import _get_network_handler
 
 
 def fetch(
@@ -89,15 +88,6 @@ def _package(
     )
 
 
-def _get_network_handler(location_type: str) -> None:
-    if location_type == "rsync":
-        return _RsyncHandler()
-    elif location_type == "S3":
-        return _S3Handler()
-    else:
-        raise ValueError(f"location_type {location_type} is unsupported")
-
-
 class _NetworkHandler(ABC):
     def __init__(self) -> None:
         super().__init__()
@@ -141,12 +131,15 @@ class _S3Handler(_NetworkHandler):
         parsed_url = urlparse(location)
         split_path = parsed_url.path.lstrip("/").split("/")
 
-        if "s3." in parsed_url.hostname:
-            bucket_name = parsed_url.hostname.split(".s3.")[0]
-            relative_path = os.path.join(*(split_path))
-        elif "s3-" in parsed_url.hostname:
-            bucket_name = split_path[0]
-            relative_path = os.path.join(*(split_path[1:]))
+        if parsed_url.hostname:
+            if "s3." in parsed_url.hostname:
+                bucket_name = parsed_url.hostname.split(".s3.")[0]
+                relative_path = os.path.join(*(split_path))
+            elif "s3-" in parsed_url.hostname:
+                bucket_name = split_path[0]
+                relative_path = os.path.join(*(split_path[1:]))
+        else:
+            raise ValueError(f"parsing the URL {location} did not yield any hostname")
 
         try:
             self._download_helper(
@@ -175,3 +168,12 @@ class _S3Handler(_NetworkHandler):
         s3 = boto3.resource("s3", config=config)
         obj = s3.Object(bucket_name, relative_path)
         obj.download_file(filepath)
+
+
+def _get_network_handler(location_type: str) -> _NetworkHandler:
+    if location_type == "rsync":
+        return _RsyncHandler()
+    elif location_type == "S3":
+        return _S3Handler()
+    else:
+        raise ValueError(f"location_type {location_type} is unsupported")

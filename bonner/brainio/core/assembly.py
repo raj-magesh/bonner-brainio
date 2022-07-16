@@ -2,7 +2,7 @@ from pathlib import Path
 
 import netCDF4
 
-from .utils import _package
+from .network import _package
 
 
 def package(
@@ -29,7 +29,7 @@ def package(
     )
 
 
-def _validate(filepath: Path):
+def _validate(filepath: Path) -> None:
     assembly = netCDF4.Dataset(filepath, "r", format="NETCDF4")
     assert (
         "presentation" in assembly.dimensions

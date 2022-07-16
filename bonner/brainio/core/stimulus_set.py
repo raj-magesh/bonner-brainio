@@ -4,7 +4,7 @@ import zipfile
 
 import pandas as pd
 
-from .core import _package
+from .network import _package
 
 
 def package(
@@ -38,7 +38,7 @@ def package(
         )
 
 
-def _validate(*, filepath_csv: Path, filepath_zip: Path):
+def _validate(*, filepath_csv: Path, filepath_zip: Path) -> None:
     stimulus_set_csv = pd.read_csv(filepath_csv)
     assert all(
         [re.match(r"^[a-z0-9_]+$", column) for column in stimulus_set_csv.columns]

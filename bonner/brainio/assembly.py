@@ -43,7 +43,7 @@ def package(
     )
 
 
-def merge_stimulus_set_metadata(assembly: xr.DataArray, stimulus_set: pd.DataFrame):
+def merge(assembly: xr.DataArray, stimulus_set: pd.DataFrame) -> xr.DataArray:
     assembly = assembly.load()
     stimulus_set = stimulus_set.loc[
         stimulus_set["stimulus_id"].isin(assembly["stimulus_id"].values), :

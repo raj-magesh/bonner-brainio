@@ -1,5 +1,28 @@
-[tool.mypy]
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
+[project]
+name = "bonner-brainio"
+description = "A minimal implementation of the BrainIO specification for neural datasets"
+readme = "README.md"
+keywords = ["BrainIO", "Bonner Lab", "neural datasets", "fMRI"]
+author = "Raj Magesh Gauthaman"
+author_email = "rgautha1@jh.edu"
+url = "https://github.com/raj-magesh/bonner-brainio"
+license = {text = "GNU General Public License v3.0"}
+dependencies = [
+    "boto3",
+    "pandas",
+    "xarray",
+    "netCDF4",
+]
+dynamic = ["version"]
+
+[tool.black]
+preview = true
+
+[tool.mypy]
 namespace_packages = true
 ignore_missing_imports = true
 

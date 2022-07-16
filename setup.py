@@ -3,6 +3,7 @@ from setuptools import setup, find_namespace_packages
 requirements = (
     "pandas",
     "xarray",
+    "netCDF4",
 )
 
 setup(

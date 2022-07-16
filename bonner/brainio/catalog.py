@@ -57,6 +57,9 @@ def _create(catalog_name: str) -> None:
     :param catalog_name: name of the BrainIO catalog
     :type catalog_name: str
     """
+    catalog_path = BRAINIO_HOME / catalog_name / "catalog.csv"
+    if catalog_path.exists():
+        return
     catalog = pd.DataFrame(
         data=None,
         columns=(
@@ -69,9 +72,8 @@ def _create(catalog_name: str) -> None:
             "stimulus_set_identifier",
         ),
     )
-    catalog_dir = BRAINIO_HOME / catalog_name
-    catalog_dir.mkdir(parents=True, exist_ok=True)
-    catalog.to_csv(catalog_dir / "catalog.csv", index=False)
+    catalog_path.parent.mkdir(parents=True, exist_ok=True)
+    catalog.to_csv(catalog_path, index=False)
 
 
 def _load(catalog_name: str) -> pd.DataFrame:

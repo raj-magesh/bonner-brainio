@@ -1,6 +1,7 @@
 from setuptools import setup, find_namespace_packages
 
 requirements = (
+    "boto3",
     "pandas",
     "xarray",
     "netCDF4",

@@ -44,3 +44,8 @@ All BrainIO data will be stored at the path specified by `BRAINIO_HOME`.
 - Simplicity: avoid features we in the Bonner Lab won't use
 - Conformity: follow the BrainIO specification exactly
 - Extensibility: don't create complex data structures beyond those provided by standard libraries
+
+## Things to do
+
+- TODO implement logging
+- TODO improve the specification to conform to the original BrainIO team's implementation

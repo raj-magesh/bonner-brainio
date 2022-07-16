@@ -5,5 +5,5 @@ Bonner-BrainIO
    :maxdepth: 2
 
    SPECIFICATION
-   public_api
-   private_api
+   public_interface
+   private_interface

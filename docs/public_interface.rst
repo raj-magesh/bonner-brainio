@@ -1,5 +1,5 @@
-Public API
-==========
+Public interface
+================
 
 Create a new catalog
 ----------------------------

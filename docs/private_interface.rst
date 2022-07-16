@@ -1,5 +1,5 @@
-Private API
-===========
+Private interface
+=================
 
 bonner.brainio.assembly
 -----------------------

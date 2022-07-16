@@ -1,27 +1,27 @@
 Public API
 ==========
 
-Create a new BrainIO Catalog
+Create a new catalog
 ----------------------------
 
 .. autofunction:: bonner.brainio.create_catalog
 
-Import an existing BrainIO Catalog
+Import an existing catalog
 ----------------------------------
 
 .. autofunction:: bonner.brainio.import_catalog
 
-Fetch a file from a BrainIO Catalog
+Fetch a file from a catalog
 -----------------------------------
 
 .. autofunction:: bonner.brainio.fetch
 
-Package a BrainIO Assembly
+Package an assembly
 --------------------------
 
 .. autofunction:: bonner.brainio.package_assembly
 
-Package a BrainIO Stimulus Set
+Package a stimulus set
 ------------------------------
 
 .. autofunction:: bonner.brainio.package_stimulus_set

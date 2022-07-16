@@ -1,6 +1,7 @@
 from typing import Dict
 from pathlib import Path
 import os
+import shutil
 import hashlib
 from urllib.parse import urlparse
 import subprocess
@@ -22,6 +23,14 @@ def lookup(
     return catalog.loc[
         filters["identifier"] & filters["lookup_type"] & filters["class"], :
     ]
+
+
+def import_catalog(
+    *, catalog_name: str, filepath: Path,
+) -> pd.DataFrame:
+    catalog_dir = BRAINIO_HOME / catalog_name
+    catalog_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(filepath, catalog_dir / "catalog.csv")
 
 
 def send(

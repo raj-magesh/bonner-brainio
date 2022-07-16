@@ -51,8 +51,8 @@ def _lookup(
     ]
 
 
-def _initialize(catalog_name: str) -> None:
-    """Initialize a catalog at $BRAINIO_HOME.
+def _create(catalog_name: str) -> None:
+    """Create a catalog at $BRAINIO_HOME.
 
     :param catalog_name: name of the BrainIO catalog
     :type catalog_name: str
@@ -84,7 +84,7 @@ def _load(catalog_name: str) -> pd.DataFrame:
     """
     path_catalog = BRAINIO_HOME / catalog_name / "catalog.csv"
     if not path_catalog.exists():
-        _initialize(catalog_name)
+        _create(catalog_name)
     return pd.read_csv(path_catalog)
 
 

@@ -2,6 +2,10 @@
 
 This is an implementation of the [BrainIO specification](https://github.com/brain-score/brainio/blob/main/docs/SPECIFICATION.md).
 
+## Installation
+
+`pip install git+https://github.com/raj-magesh/bonner-brainio`
+
 ## API
 
 ### bonner.brainio.core

@@ -11,6 +11,17 @@ from .core import BRAINIO_HOME, fetch, package_stimulus_set
 def load(
     catalog_name: str, identifier: str, check_integrity: bool = True
 ) -> Tuple[pd.DataFrame, Path]:
+    """Load a stimulus set from a catalog.
+
+    :param catalog_name: name of the BrainIO catalog
+    :type catalog_name: str
+    :param identifier: identifier of the stimulus set, as defined in the BrainIO specification
+    :type identifier: str
+    :param check_integrity: whether to check the SHA1 hash of the file, defaults to True
+    :type check_integrity: bool, optional
+    :return: the stimulus set metadata and the path to the stimuli
+    :rtype: Tuple[pd.DataFrame, Path]
+    """
     filepaths = {
         filetype: fetch(
             catalog_name=catalog_name,
@@ -45,6 +56,21 @@ def package(
     location_type: str,
     location: str,
 ) -> None:
+    """Package a stimulus set.
+
+    :param identifier: identifier of the stimulus set, as defined in the BrainIO specification
+    :type identifier: str
+    :param stimulus_set: stimulus set metadata
+    :type stimulus_set: pd.DataFrame
+    :param stimulus_dir: directory containing the stimuli
+    :type stimulus_dir: Path
+    :param catalog_name: name of the BrainIO catalog
+    :type catalog_name: str
+    :param location_type: location_type of the stimulus set, as defined in the BrainIO specification
+    :type location_type: str
+    :param location: location of the stimulus set, as defined in the BrainIO specification
+    :type location: str
+    """
 
     filepaths = {
         "csv": _create_csv(
@@ -76,6 +102,17 @@ def package(
 def _create_csv(
     *, identifier: str, stimulus_set: pd.DataFrame, catalog_name: str
 ) -> Path:
+    """Creates a CSV file of the stimulus set metadata.
+
+    :param identifier: identifier of the stimulus set, as defined in the BrainIO specification
+    :type identifier: str
+    :param stimulus_set: the stimulus set metadata
+    :type stimulus_set: pd.DataFrame
+    :param catalog_name: name of the BrainIO catalog
+    :type catalog_name: str
+    :return: path to the CSV file
+    :rtype: Path
+    """
     filepath = BRAINIO_HOME / catalog_name / f"{identifier}.csv"
     stimulus_set.to_csv(filepath, index=False)
     return filepath
@@ -88,6 +125,19 @@ def _create_zip(
     stimulus_dir: Path,
     catalog_name: str,
 ) -> Path:
+    """Creates a ZIP archive of the stimulus set stimuli.
+
+    :param identifier: identifier of the stimulus set, as defined in the BrainIO specification
+    :type identifier: str
+    :param stimulus_set: the stimulus set metadata
+    :type stimulus_set: pd.DataFrame
+    :param stimulus_dir: directory containing the stimuli
+    :type stimulus_dir: Path
+    :param catalog_name: name of the BrainIO catalog
+    :type catalog_name: str
+    :return: path to the ZIP archive
+    :rtype: Path
+    """
     filepath_zip = BRAINIO_HOME / catalog_name / f"{identifier}.zip"
     with zipfile.ZipFile(filepath_zip, "w") as zip:
         for filename in stimulus_set["filename"]:

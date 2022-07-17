@@ -102,7 +102,7 @@ def _package(
 
     sha1 = _compute_sha1(filepath)
     handler = _get_network_handler(location_type=location_type)
-    handler.download(
+    handler.upload(
         location=location,
         filepath=filepath,
     )
@@ -163,8 +163,20 @@ class _RsyncHandler(_NetworkHandler):
         """
         subprocess.run(
             [
+                "ssh",
+                urlparse(location).scheme,
+                "mkdir",
+                "-p",
+                str(Path(urlparse(location).path).parent),
+            ],
+            check=True,
+        )
+        subprocess.run(
+            [
                 "rsync",
                 "-vzhW",
+                "--recursive",
+                "--relative",
                 "--progress",
                 str(filepath),
                 location,

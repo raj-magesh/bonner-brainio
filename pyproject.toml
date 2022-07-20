@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bonner-brainio"
-description = "A minimal implementation of the BrainIO specification for neural datasets"
+description = "Bonner Lab implementation of the BrainIO specification for neural datasets"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {file = "LICENSE"}
@@ -12,10 +12,9 @@ authors = [
     {name = "Raj Magesh Gauthaman", email = "rgautha1@jh.edu"}
 ]
 keywords = [
-    "BrainIO",
     "Bonner Lab",
+    "BrainIO",
     "neural datasets",
-    "fMRI"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -28,7 +27,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
-urls = {repository = "https://github.com/raj-magesh/bonner-brainio"}
+urls = {repository = "https://github.com/BonnerLab/bonner-brainio"}
 dependencies = [
     "boto3",
     "pandas",

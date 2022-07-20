@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 import hashlib
 
-BRAINIO_HOME = Path(os.getenv("BRAINIO_HOME", str(Path.home() / "brainio")))
+BONNER_BRAINIO_HOME = Path(os.getenv("BRAINIO_HOME", str(Path.home() / "brainio")))
 
 
 def _compute_sha1(filepath: Path) -> str:

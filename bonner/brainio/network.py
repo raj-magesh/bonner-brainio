@@ -10,7 +10,7 @@ import botocore
 from botocore.config import Config
 
 from .catalog import _lookup, _append
-from .utils import BRAINIO_HOME, _compute_sha1
+from .utils import BONNER_BRAINIO_HOME, _compute_sha1
 
 
 def fetch(
@@ -46,7 +46,7 @@ def fetch(
         not metadata.empty
     ), f"{lookup_type} {identifier} not found in catalog {catalog_name}"
     filepath = (
-        BRAINIO_HOME
+        BONNER_BRAINIO_HOME
         / catalog_name
         / Path(urlparse(metadata["location"].item()).path).name
     )

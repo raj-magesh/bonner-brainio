@@ -4,7 +4,7 @@ import shutil
 
 import pandas as pd
 
-from .utils import BRAINIO_HOME
+from .utils import BONNER_BRAINIO_HOME
 
 
 def _import(
@@ -19,7 +19,7 @@ def _import(
     :param filepath: path to the catalog CSV file
     :type filepath: Path
     """
-    catalog_dir = BRAINIO_HOME / catalog_name
+    catalog_dir = BONNER_BRAINIO_HOME / catalog_name
     catalog_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(filepath, catalog_dir / "catalog.csv")
 
@@ -57,7 +57,7 @@ def _create(catalog_name: str) -> None:
     :param catalog_name: name of the BrainIO catalog
     :type catalog_name: str
     """
-    catalog_path = BRAINIO_HOME / catalog_name / "catalog.csv"
+    catalog_path = BONNER_BRAINIO_HOME / catalog_name / "catalog.csv"
     if catalog_path.exists():
         return
     catalog = pd.DataFrame(
@@ -84,7 +84,7 @@ def _load(catalog_name: str) -> pd.DataFrame:
     :return: catalog as a DataFrame
     :rtype: pd.DataFrame
     """
-    path_catalog = BRAINIO_HOME / catalog_name / "catalog.csv"
+    path_catalog = BONNER_BRAINIO_HOME / catalog_name / "catalog.csv"
     if not path_catalog.exists():
         _create(catalog_name)
     return pd.read_csv(path_catalog)
@@ -102,5 +102,5 @@ def _append(catalog_name: str, *, entry: Mapping[str, str]) -> pd.DataFrame:
     """
     catalog = _load(catalog_name)
     catalog = pd.concat([catalog, pd.DataFrame(entry, index=[len(catalog)])])
-    catalog.to_csv(BRAINIO_HOME / catalog_name / "catalog.csv", index=False)
+    catalog.to_csv(BONNER_BRAINIO_HOME / catalog_name / "catalog.csv", index=False)
     return catalog

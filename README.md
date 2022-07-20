@@ -31,7 +31,7 @@ All Bonner-BrainIO data will be stored at the path specified by `BONNER_BRAINIO_
 
 - Catalogs are stored at `$BONNER_BRAINIO_HOME/<catalog-name>/catalog.csv`
 - When loading assemblies and stimulus sets, the files are downloaded to `$BONNER_BRAINIO_HOME/<catalog-name>/`
-- When packaging assemblies and stimulus sets using the convenience functions, the files are first placed in `$BRAINIO_HOME/<catalog-name>/` before being pushed to the specified remote location
+- When packaging assemblies and stimulus sets using the convenience functions, the files are first placed in `$BONNER_BRAINIO_HOME/<catalog-name>/` before being pushed to the specified remote location
 
 ## Things to do
 

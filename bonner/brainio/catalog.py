@@ -52,7 +52,7 @@ def _lookup(
 
 
 def _create(catalog_name: str) -> None:
-    """Create a catalog at $BRAINIO_HOME.
+    """Create a catalog at $BONNER_BRAINIO_HOME.
 
     :param catalog_name: name of the BrainIO catalog
     :type catalog_name: str

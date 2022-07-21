@@ -91,7 +91,7 @@ def _package(
     :param location: location of the file, as defined in the BrainIO specification
     :type location: str
     :param stimulus_set_identifier: identifier of the stimulus set associated with the file, if it is an assembly, defaults to ""
-    :type stimulus_set_identifier: str, optional
+    :type stimulus_set_identifier: str
     """
     assert _lookup(
         catalog_name=catalog_name,
@@ -256,7 +256,7 @@ class _S3Handler(_NetworkHandler):
         filepath: Path,
         bucket_name: str,
         relative_path: str,
-        config: Optional[Config],
+        config: Config | None,
     ) -> None:
         """Utility function for downloading a file from S3.
 
@@ -267,7 +267,7 @@ class _S3Handler(_NetworkHandler):
         :param relative_path: relative path of the file within the S3 bucket
         :type relative_path: str
         :param config: TODO config for Amazon S3
-        :type config: Optional[Config]
+        :type config: Config | None
         """
         s3 = boto3.resource("s3", config=config)
         obj = s3.Object(bucket_name, relative_path)

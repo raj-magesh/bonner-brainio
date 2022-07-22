@@ -1,13 +1,13 @@
 import re
 import zipfile
+
+# if TYPE_CHECKING:
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from ._network import _send
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def _package(

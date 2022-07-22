@@ -1,12 +1,12 @@
 import shutil
+
+# if TYPE_CHECKING:
+from pathlib import Path
 from typing import TYPE_CHECKING, Mapping
 
 import pandas as pd
 
 from ._utils import _BONNER_BRAINIO_HOME
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def _import(

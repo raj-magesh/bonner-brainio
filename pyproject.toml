@@ -31,7 +31,6 @@ urls = {repository = "https://github.com/BonnerLab/bonner-brainio"}
 dependencies = [
     "boto3",
     "pandas",
-    "xarray",
     "netCDF4",
 ]
 dynamic = ["version"]
@@ -45,6 +44,7 @@ dev = [
     "sphinx",
     "sphinx-autodoc-typehints",
     "pydocstringformatter",
+    "docstr-coverage",
     "pre-commit",
 ]
 

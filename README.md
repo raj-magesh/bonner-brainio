@@ -25,7 +25,6 @@ All Bonner-BrainIO data will be stored at the path specified by `BONNER_BRAINIO_
 - `boto3`: required for the S3 backend
 - `pandas`: handling the catalog (`catalog.csv`) and the stimulus set metadata .csv files
 - `netCDF4`: validating assemblies
-- `xarray`: using the convenience functions in `assembly.py`
 
 ## File organization
 

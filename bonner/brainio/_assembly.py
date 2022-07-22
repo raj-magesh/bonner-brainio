@@ -1,11 +1,10 @@
+# if TYPE_CHECKING:
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import netCDF4
 
 from ._network import _send
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def _package(

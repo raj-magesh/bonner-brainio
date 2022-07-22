@@ -4,7 +4,7 @@ Bonner-BrainIO
 .. toctree::
    :maxdepth: 2
 
-   SPECIFICATION
-   public_interface
-   private_interface
-   environment_variables
+   pages/SPECIFICATION
+   pages/public_interface
+   pages/private_interface
+   pages/environment_variables

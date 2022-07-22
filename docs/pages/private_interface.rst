@@ -1,13 +1,6 @@
 Private interface
 =================
 
-bonner.brainio.assembly
------------------------
-
-.. automodule:: bonner.brainio._assembly
-   :members:
-   :private-members:
-
 bonner.brainio.catalog
 ----------------------
 
@@ -19,6 +12,13 @@ bonner.brainio.network
 ----------------------
 
 .. automodule:: bonner.brainio._network
+   :members:
+   :private-members:
+
+bonner.brainio.assembly
+-----------------------
+
+.. automodule:: bonner.brainio._assembly
    :members:
    :private-members:
 

@@ -1,8 +1,8 @@
-from pathlib import Path
-import os
 import hashlib
+import os
+from pathlib import Path
 
-BONNER_BRAINIO_HOME = Path(
+_BONNER_BRAINIO_HOME = Path(
     os.getenv("BONNER_BRAINIO_HOME", str(Path.home() / "brainio"))
 )
 
@@ -11,9 +11,7 @@ def _compute_sha1(filepath: Path) -> str:
     """Compute the SHA1 hash of a file.
 
     :param filepath: path to file
-    :type filepath: Path
     :return: SHA1 hash of the file
-    :rtype: str
     """
     buffer_size = 64 * 2**10
     sha1 = hashlib.sha1()

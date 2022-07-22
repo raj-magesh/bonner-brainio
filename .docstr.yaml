@@ -1,0 +1,3 @@
+paths:
+  - /home/shared/libraries/bonner-brainio/bonner/brainio/*
+args: ["--verbose", "3"]

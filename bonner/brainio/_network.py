@@ -1,19 +1,18 @@
-from typing import Optional
+import os
+import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
 from urllib.parse import urlparse
-import subprocess
-import os
 
 import boto3
 import botocore
 from botocore.config import Config
 
-from .catalog import _lookup, _append
-from .utils import BONNER_BRAINIO_HOME, _compute_sha1
+from ._catalog import _append, _lookup
+from ._utils import _BONNER_BRAINIO_HOME, _compute_sha1
 
 
-def fetch(
+def _fetch(
     *,
     catalog_name: str,
     identifier: str,
@@ -24,17 +23,11 @@ def fetch(
     """Fetch a file from the catalog.
 
     :param catalog_name: name of the BrainIO catalog
-    :type catalog_name: str
     :param identifier: identifier of the file, as defined in the BrainIO specification
-    :type identifier: str
     :param lookup_type: lookup_type of the file, as defined in the BrainIO specification
-    :type lookup_type: str
     :param class_: class of the file, as defined in the BrainIO specification
-    :type class_: str
     :param check_integrity: whether to check the SHA1 hash of the file
-    :type check_integrity: bool
     :return: path to the file
-    :rtype: Path
     """
     metadata = _lookup(
         catalog_name=catalog_name,
@@ -46,13 +39,13 @@ def fetch(
         not metadata.empty
     ), f"{lookup_type} {identifier} not found in catalog {catalog_name}"
     filepath = (
-        BONNER_BRAINIO_HOME
+        _BONNER_BRAINIO_HOME
         / catalog_name
         / Path(urlparse(metadata["location"].item()).path).name
     )
     if not filepath.exists():
         handler = _get_network_handler(location_type=metadata["location_type"].item())
-        handler.download(
+        handler._download(
             location=metadata["location"].item(),
             filepath=filepath,
         )
@@ -63,7 +56,7 @@ def fetch(
     return filepath
 
 
-def _package(
+def _send(
     *,
     identifier: str,
     lookup_type: str,
@@ -77,21 +70,13 @@ def _package(
     """Package a file to the catalog.
 
     :param identifier: identifier of the file, as defined in the BrainIO specification
-    :type identifier: str
     :param lookup_type: lookup_type of the file, as defined in the BrainIO specification
-    :type lookup_type: str
     :param class_: class of the file, as defined in the BrainIO specification
-    :type class_: str
     :param filepath: path to the file
-    :type filepath: Path
     :param catalog_name: name of the BrainIO catalog
-    :type catalog_name: str
     :param location_type: location_type of the file, as defined in the BrainIO specification
-    :type location_type: str
     :param location: location of the file, as defined in the BrainIO specification
-    :type location: str
     :param stimulus_set_identifier: identifier of the stimulus set associated with the file, if it is an assembly, defaults to ""
-    :type stimulus_set_identifier: str
     """
     assert _lookup(
         catalog_name=catalog_name,
@@ -102,7 +87,7 @@ def _package(
 
     sha1 = _compute_sha1(filepath)
     handler = _get_network_handler(location_type=location_type)
-    handler.upload(
+    handler._upload(
         location=location,
         filepath=filepath,
     )
@@ -128,24 +113,20 @@ class _NetworkHandler(ABC):
         super().__init__()
 
     @abstractmethod
-    def upload(self, *, filepath: Path, location: str) -> None:
+    def _upload(self, *, filepath: Path, location: str) -> None:
         """Upload a file to the remote.
 
         :param filepath: local path of the file
-        :type filepath: Path
         :param location: remote path of the file
-        :type location: str
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def download(self, *, filepath: Path, location: str) -> None:
+    def _download(self, *, filepath: Path, location: str) -> None:
         """Download a file from the remote.
 
         :param filepath: local path of the file
-        :type filepath: Path
         :param location: remote path of the file
-        :type location: str
         """
         raise NotImplementedError()
 
@@ -153,13 +134,11 @@ class _NetworkHandler(ABC):
 class _RsyncHandler(_NetworkHandler):
     """Uses Rsync to upload and download files to/from a networked server."""
 
-    def upload(self, filepath: Path, location: str) -> None:
+    def _upload(self, filepath: Path, location: str) -> None:
         """Upload a file to the remote using Rsync.
 
         :param filepath: local path of the file
-        :type filepath: Path
         :param location: remote path of the file (<server-name>:<remote-path>)
-        :type location: str
         """
         subprocess.run(
             [
@@ -184,13 +163,11 @@ class _RsyncHandler(_NetworkHandler):
             check=True,
         )
 
-    def download(self, filepath: Path, location: str) -> None:
+    def _download(self, filepath: Path, location: str) -> None:
         """Download a file from the remote using Rsync.
 
         :param filepath: local path of the file
-        :type filepath: Path
         :param location: remote path of the file (<server-name>:<remote-path>)
-        :type location: str
         """
         if not filepath.exists():
             subprocess.run(
@@ -202,24 +179,20 @@ class _RsyncHandler(_NetworkHandler):
 class _S3Handler(_NetworkHandler):
     """Upload and download files to/from Amazon S3."""
 
-    def upload(self, filepath: Path, location: str) -> None:
+    def _upload(self, filepath: Path, location: str) -> None:
         """Upload a file to an S3 bucket.
 
         :param filepath: local path of the file
-        :type filepath: Path
         :param location: remote URL of the file
-        :type location: str
         """
         client = boto3.client("s3")
         client.upload_file(str(filepath), location)
 
-    def download(self, filepath: Path, location: str) -> None:
+    def _download(self, filepath: Path, location: str) -> None:
         """Download a file from an S3 bucket.
 
         :param filepath: local path of the file
-        :type filepath: Path
         :param location: remote URL of the file
-        :type location: str
         """
         parsed_url = urlparse(location)
         split_path = parsed_url.path.lstrip("/").split("/")
@@ -241,7 +214,7 @@ class _S3Handler(_NetworkHandler):
                 relative_path=relative_path,
                 config=None,
             )
-        except:
+        except Exception:
             config = Config(signature_version=botocore.UNSIGNED)
             self._download_helper(
                 filepath=filepath,
@@ -261,13 +234,9 @@ class _S3Handler(_NetworkHandler):
         """Utility function for downloading a file from S3.
 
         :param filepath: local path to file
-        :type filepath: Path
         :param bucket_name: name of the S3 bucket
-        :type bucket_name: str
         :param relative_path: relative path of the file within the S3 bucket
-        :type relative_path: str
         :param config: TODO config for Amazon S3
-        :type config: Config | None
         """
         s3 = boto3.resource("s3", config=config)
         obj = s3.Object(bucket_name, relative_path)
@@ -278,10 +247,8 @@ def _get_network_handler(location_type: str) -> _NetworkHandler:
     """Get the correct network handler for the provided location_type.
 
     :param location_type: location_type, as defined in the BrainIO specification
-    :type location_type: str
     :raises ValueError: if the location_type provided is unsupported
     :return: the network handler used to upload/download files
-    :rtype: _NetworkHandler
     """
     if location_type == "rsync":
         return _RsyncHandler()

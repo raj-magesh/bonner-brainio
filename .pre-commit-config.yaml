@@ -1,0 +1,35 @@
+default_language_version:
+    python: python3.10
+repos:
+  - repo: https://github.com/psf/black
+    rev: 22.6.0
+    hooks:
+      - id: black
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        args: ["--profile", "black", "--filter-files"]
+  - repo: https://github.com/DanielNoord/pydocstringformatter
+    rev: v0.6.2
+    hooks:
+      - id: pydocstringformatter
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.4.0
+    hooks:
+      - id: nbqa-black
+      - id: nbqa-pyupgrade
+        args: [--py36-plus]
+      - id: nbqa-isort
+  - repo: https://github.com/asottile/blacken-docs
+    rev: v1.12.1
+    hooks:
+    -   id: blacken-docs
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.37.2
+    hooks:
+    -   id: pyupgrade
+  # - repo: https://github.com/HunterMcGushion/docstr_coverage
+  #   rev: v2.2.0
+  #   hooks:
+  #     - id: docstr-coverage

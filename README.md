@@ -13,8 +13,8 @@ This is an implementation of the [BrainIO specification](https://github.com/brai
 - `create_catalog`: creates a new catalog
 - `import_catalog`: imports an existing catalog from a file
 - `fetch`: fetches an item from a catalog
-- `package_assembly`: packages an assembly given its netCDF4 file
 - `package_stimulus_set`: packages a stimulus set given its .csv and .zip files
+- `package_assembly`: packages an assembly given its netCDF4 file
 
 ## Environment variables
 

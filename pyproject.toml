@@ -37,8 +37,16 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-docs = ["sphinx"]
-dev = ["black", "mypy"]
+dev = [
+    "black",
+    "isort",
+    "mypy",
+    "pytest",
+    "sphinx",
+    "sphinx-autodoc-typehints",
+    "pydocstringformatter",
+    "pre-commit",
+]
 
 [tool.black]
 preview = true
@@ -65,3 +73,10 @@ warn_no_return = true
 warn_unreachable = true
 
 allow_redefinition = true
+
+[tool.pydocstringformatter]
+write = true
+summary-quotes-same-line = true
+
+[tool.isort]
+profile = "black"

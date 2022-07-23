@@ -1,109 +1,110 @@
-BrainIO Technical Specification
-===============================
+BrainIO Format
+==============
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119.
 
 BrainIO defines three types of entity:
 
-* BrainIO Data Assembly (hereafter, "Data Assembly")
-* BrainIO Stimulus Set (hereafter, "Stimulus Set")
-* BrainIO Catalog (hereafter, "Catalog")
+* Data Assembly
+* Stimulus Set
+* Catalog
 
 .. _specification.assembly:
 
+
+Technical Specification
+-----------------------
+
 BrainIO Data Assembly
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
-A Data Assembly
+A **Data Assembly** MUST comprise
 
-* MUST be a `netCDF-4 <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#netcdf_4_spec>`_ file whose
+    * a string **identifier**
+    * a **`netCDF-4 <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#netcdf_4_spec>`_ file** which
 
-    * root `group <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#groups_spec>`_
+        * MUST have a root `group <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#groups_spec>`_ that contains exactly one `non-coordinate <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#dims_spec>`_ `variable <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#vars_spec>`_
+        * MUST contain the string-type `global attributes <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#atts_spec>`_ 
 
-        * MUST contain exactly one `variable <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#vars_spec>_` corresponding to experimental data
-        * MAY contain other `variables <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#vars_spec>_` corresponding to metadata with the same `dimensions <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#dims_spec>`_ as the experimental data
-
-    * non-root `groups <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#groups_spec>`_
-
-        * MAY contain `variables <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#vars_spec>_` corresponding to metadata with `dimensions <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#dims_spec>`_ different from the experimental data
-
-* MUST contain the string-type `global attributes <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#atts_spec>`_ ``identifier`` and ``stimulus_set_identifier``
+            * ``identifier``, which MUST have a value identical to the **Data Assembly** **identifier**
+            * ``stimulus_set_identifier``
 
 .. _specification.stimulus_set:
 
 BrainIO Stimulus Set
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
-A BrainIO Stimulus Set comprises
+A **Stimulus Set** MUST comprise
 
-    * a `ZIP <https://datatracker.ietf.org/doc/html/rfc4180>`_ archive (hereafter, "Stimulus Set ZIP Archive") that MUST contain files where each corresponds to an experimental stimulus
-    * a `CSV <https://datatracker.ietf.org/doc/html/rfc4180>`_ file (hereafter, "Stimulus Set CSV File")
+* a **`ZIP <https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT>`_ archive**
+* a **`CSV <https://datatracker.ietf.org/doc/html/rfc4180>`_ file**
 
-        * where each row MUST contain metadata about one file in the Stimulus Set ZIP Archive
-        * that MUST have a `header row <https://datatracker.ietf.org/doc/html/rfc4180>`_ of column names comprising lowercase letters, numerals, and underscores
-        * that MUST contain the columns
+    * that MUST have a `header row <https://datatracker.ietf.org/doc/html/rfc4180>`_ of column names, which
 
-            * ``stimulus_id``, that MUST have alphanumeric entries that are unique within the column
-            * ``filename``, that MUST have entries representing the filepaths of the corresponding files within the Stimulus Set ZIP Archive
+        * MUST comprise lowercase letters, numerals, and underscores
+        * MUST be unique within the row
 
-        * that MAY contain additional metadata columns
+    * that MUST contain columns named
+
+        * ``filename``, whose entries
+
+            * MUST contain the relative filepath of a file within the **Stimulus Set** **ZIP archive**
+            * MUST be unique within the column
+
+        * ``stimulus_id``, whose entries
+
+            * MUST be alphanumeric 
+            * MUST be unique within the column
 
 .. _specification.catalog:
 
 BrainIO Catalog
 ---------------
 
-A BrainIO Catalog
+A **Catalog**
 
-* MUST be a `CSV file <https://datatracker.ietf.org/doc/html/rfc4180>`_
+* MUST comprise a string **identifier**
+* MAY comprise **Data Assemblies** and/or **Stimulus Sets**, where
 
-    * where each row
+    * each **Data Assembly** **netCDF-4 file**, **Stimulus Set** **ZIP archive**, and **Stimulus Set** **CSV file** MUST correspond to a row in the **Catalog** **CSV file**
+    * each **Data Assembly** **netCDF-4 file's** ``stimulus_set_identifier`` `global attribute <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#atts_spec>`_ MUST correspond to the **identifier** of a **Stimulus Set**
 
-        * MUST contain metadata corresponding to exactly one of
+* MUST comprise a **`CSV file <https://datatracker.ietf.org/doc/html/rfc4180>`_**
 
-            * a Data Assembly
-            * a Stimulus Set ZIP Archive
-            * a Stimulus Set CSV File
+    * that MUST have a `header row <https://datatracker.ietf.org/doc/html/rfc2119>`_  of column names, which
+        
+        * MUST comprise lowercase letters, numerals, and underscores
+        * MUST be unique within the row
 
-    * where
+    * where each row MUST correspond to a **Data Assembly** **netCDF-4 file**, **Stimulus Set** **ZIP archive**, or **Stimulus Set** **CSV file** in the **Catalog**
+    * that MUST contain columns named
 
-        * if a row contains metadata corresponding to a Stimulus Set ZIP Archive, another row corresponding to the Stimulus Set CSV File MUST be present
-        * if a row contains metadata corresponding to a Data Assembly
+        * ``sha1``, whose entries
 
-    * that MUST have a `header row <https://datatracker.ietf.org/doc/html/rfc2119>`_  of column names comprising lowercase letters, numerals, and underscores
-    * that MUST contain the columns
+            * MUST be the `SHA1 hashes <https://datatracker.ietf.org/doc/html/rfc3174>`_ of the files corresponding to the rows
+            * MUST be unique within the column
 
-        * ``identifier``
-        * ``lookup_type``
+        * ``lookup_type``, whose entries
+
+            * MUST be ``assembly`` if the rows corresponds to **Data Assembly** **netCDF-4 files**
+            * MUST be ``stimulus_set`` if the rows correspond to **Stimulus Set** **ZIP archives** or **Stimulus Set** **CSV files**
+
+        * ``identifier``, whose entries,
+
+            * if the rows correspond to **Data Assembly** **netCDF-4 files**,
+
+                * MUST be equal to the ``identifier`` `global attributes <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#atts_spec>`_ of the **Data Assembly** **netCDF-4 files**
+                * MUST be unique among all the rows in the **Catalog** that correspond to **Data Assembly** **netCDF-4 files**
+
+            * if the rows correspond to **Stimulus Set** **ZIP archives** or **Stimulus Set** **CSV files**,
+
+                * MUST be equal to the **identifiers** of the **Stimulus Sets**
+
+        * ``stimulus_set_identifier``, whose entries
+
+            * MUST be equal to the ``stimulus_set_identifier`` `global attribute <https://docs.unidata.ucar.edu/netcdf-c/current/file_format_specifications.html#atts_spec>`_ of the Data Assembly if the row corresponds to a Data Assembly
+            * MUST be empty if the row corresponds to a Stimulus Set ZIP Archive or a Stimulus Set CSV file
+
         * ``location_type``
         * ``location``
-        * ``sha1``, that MUST be the `SHA1 hash <https://datatracker.ietf.org/doc/html/rfc3174>`_ of the file
-        * ``stimulus_set_identifier``
         * ``class``
-
-* MUST have a string **identifier** that SHOULD be globally unique
-* MUST contain a
-
-Each row of the BrainIO Catalog refers to either a BrainIO Data Assembly or a BrainIO Stimulus Set.
-
-In each row of the BrainIO Catalog, the columns MUST contain the following information:
-
-* ``identifier``: the ``identifier`` of the BrainIO Data Assembly or
-
-Metadata referring to a BrainIO Data Assembly is stored in a BrainIO Catalog as a single row
-
-    * ``identifier``
-
-        * to ``identifiers`` of BrainIO Data Assemblies and BrainIO Stimulus Sets
-    * ``lookup_type``, which MUST be ``stimulus_set``
-
-
-
-Catalog
--------
-
-
-.. _spec_stimulus_set:
-
-Stimulus Set
-------------

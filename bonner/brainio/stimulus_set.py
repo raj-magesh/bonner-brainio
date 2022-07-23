@@ -11,6 +11,54 @@ import pandas as pd
 from ._network import send
 
 
+class StimulusSet:
+    def __init__(self, identifier: str, path_csv: Path, path_zip: Path) -> None:
+        self.identifier = identifier
+        self._path_csv = path_csv
+        self._path_zip = path_zip
+
+    def _validate(self) -> None:
+        """Validate the Stimulus Set"""
+
+        assert pd.read_csv(
+            nrows=1, columns=["column"]
+        ), "column headers in the Stimulus Set CSV file MUST be unique"
+
+        file_csv = pd.read_csv(self._path_csv)
+
+        assert all(
+            [re.match(r"^[a-z0-9_]+$", column) for column in file_csv.columns]
+        ), (
+            "column headers in the Stimulus Set CSV file MUST contain only lowercase"
+            " alphabets, digits, and underscores"
+        )
+        assert (
+            "stimulus_id" in file_csv.columns
+        ), "'stimulus_id' MUST be a column in the Stimulus Set CSV file"
+        assert (
+            "filename" in file_csv.columns
+        ), "'filename' MUST be a column in the Stimulus Set CSV file"
+        assert file_csv[
+            "stimulus_id"
+        ].is_unique, (
+            "'stimulus_id' must be unique across all rows in the Stimulus Set CSV file"
+        )
+        assert all(
+            [
+                re.match(r"^[a-zA-z0-9]+$", stimulus_id)
+                for stimulus_id in file_csv["stimulus_id"]
+            ]
+        ), "the 'stimulus_id' column must be alphanumeric (only alphabets and digits)"
+
+        with zipfile.ZipFile(self.path_zip, mode="r") as f:
+            assert set(file_csv["filename"]).issubset(
+                {zipinfo.filename for zipinfo in f.infolist()}
+            ), (
+                "the 'filename' column in the stimulus_set .csv file does not match all"
+                " the filenames in the stimulus_set .zip archive"
+            )
+
+
 def package(
     *,
     identifier: str,
@@ -50,44 +98,4 @@ def package(
             location_type=location_type,
             location=location,
             stimulus_set_identifier="",
-        )
-
-
-def _validate(*, filepath_csv: Path, filepath_zip: Path) -> None:
-    """Validate the stimulus set and ensure that it follows the BrainIO specification.
-
-    :param filepath_csv: path to CSV file containing stimulus set metadata
-    :param filepath_zip: path to ZIP archive containing stimuli
-    """
-    stimulus_set_csv = pd.read_csv(filepath_csv)
-    assert all(
-        [re.match(r"^[a-z0-9_]+$", column) for column in stimulus_set_csv.columns]
-    ), (
-        "column headers in the stimulus_set .csv file must contain only lowercase"
-        " alphabets, digits, and underscores"
-    )
-    assert (
-        "stimulus_id" in stimulus_set_csv.columns
-    ), "'stimulus_id' must be a column in the stimulus_set .csv file"
-    assert (
-        "filename" in stimulus_set_csv.columns
-    ), "'filename' must be a column in the stimulus_set .csv file"
-    assert stimulus_set_csv[
-        "stimulus_id"
-    ].is_unique, (
-        "'stimulus_id' must be unique across all rows in the stimulus_set .csv file"
-    )
-    assert all(
-        [
-            re.match(r"^[a-zA-z0-9]+$", stimulus_id)
-            for stimulus_id in stimulus_set_csv["stimulus_id"]
-        ]
-    ), "the 'stimulus_id' column must be alphanumeric (only alphabets and digits)"
-
-    with zipfile.ZipFile(filepath_zip, mode="r") as f:
-        assert set(stimulus_set_csv["filename"]) == {
-            zipinfo.filename for zipinfo in f.infolist()
-        }, (
-            "the 'filename' column in the stimulus_set .csv file does not match all the"
-            " filenames in the stimulus_set .zip archive"
         )

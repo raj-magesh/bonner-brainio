@@ -1,16 +1,17 @@
+"""TODO add docstring."""
+
+__all__: list[str] = ["package", "load"]
+
 import re
 import zipfile
-
-# if TYPE_CHECKING:
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from ._network import _send
+from ._network import send
 
 
-def _package(
+def package(
     *,
     identifier: str,
     filepath_csv: Path,
@@ -40,7 +41,7 @@ def _package(
         (filepath_csv, class_csv, location_csv),
         (filepath_zip, class_zip, location_zip),
     ):
-        _send(
+        send(
             identifier=identifier,
             lookup_type="stimulus_set",
             class_=class_,

@@ -39,10 +39,10 @@ dynamic = ["version"]
 dev = [
     "black",
     "isort",
+    "pylint",
     "mypy",
     "pytest",
     "sphinx",
-    "sphinx-autodoc-typehints",
     "pydocstringformatter",
     "docstr-coverage",
     "pre-commit",
@@ -74,9 +74,9 @@ warn_unreachable = true
 
 allow_redefinition = true
 
+[tool.isort]
+profile = "black"
+
 [tool.pydocstringformatter]
 write = true
 summary-quotes-same-line = true
-
-[tool.isort]
-profile = "black"

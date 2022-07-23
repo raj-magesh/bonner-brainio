@@ -1,13 +1,15 @@
+"""TODO add docstring."""
+
+__all__: list[str] = []
+
 import hashlib
 import os
 from pathlib import Path
 
-_BONNER_BRAINIO_HOME = Path(
-    os.getenv("BONNER_BRAINIO_HOME", str(Path.home() / "brainio"))
-)
+HOME = Path(os.getenv("BONNER_BRAINIO_HOME", str(Path.home() / "brainio")))
 
 
-def _compute_sha1(filepath: Path) -> str:
+def compute_sha1(filepath: Path) -> str:
     """Compute the SHA1 hash of a file.
 
     :param filepath: path to file

@@ -34,7 +34,11 @@ All Bonner-BrainIO data will be stored at the path specified by `BONNER_BRAINIO_
 
 ## Things to do
 
+- TODO setup tox
+- TODO setup CI
 - TODO implement logging
 - TODO write tests
+- TODO check out bandit
 - TODO improve the specification to conform to the original BrainIO team's implementation
 - TODO remove `setup.py` once `setuptools` [allows editable installs with a `pyproject.toml`](https://github.com/pypa/setuptools/issues/2816)
+- TODO several pathlib imports are unnecessary and should be wrapped in `if typing.TYPE_CHECKING`, but this breaks Sphinx's autodoc extension

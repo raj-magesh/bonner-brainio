@@ -2,137 +2,136 @@
 
 __all__: list[str] = ["Catalog"]
 
-import shutil
+import os
 import zipfile
-from collections.abc import Mapping
 from pathlib import Path
-from urllib.parse import urlparse
 
 import netCDF4
 import pandas as pd
 
-from ._network import get_network_handler
-from ._utils import HOME, compute_sha1
-from ._validation import validate_catalog, validate_data_assembly, validate_stimulus_set
+from ._network import fetch, send
+from ._utils import (
+    compute_sha1,
+    validate_catalog,
+    validate_data_assembly,
+    validate_stimulus_set,
+)
+
+HOME = Path(os.getenv("BONNER_BRAINIO_HOME", str(Path.home() / "brainio")))
 
 
 class Catalog:
-    def __init__(self, identifier: str, *, path: Path | None = None) -> None:
+    def __init__(
+        self,
+        identifier: str,
+        *,
+        path_csv: Path | None = None,
+        path_cache: Path | None = None,
+    ) -> None:
+        """Initialize a Catalog.
+
+        :param identifier: identifier of the Catalog
+        :param path_csv: path to the (potentially existing) Catalog CSV file, defaults to $BONNER_BRAINIO_HOME/<identifier>/catalog.csv
+        :param path_cache: directory to use as a local file cache, defaults to $BONNER_BRAINIO_HOME/<identifier>
+        """
         self.identifier = identifier
-        self._path = HOME / self.identifier / "catalog.csv"
-        self._create(path=path)
-        validate_catalog(path=self._path)
 
-    def _create(self, *, path: Path | None = None) -> None:
-        if self._path.exists():
-            raise ValueError(
-                f"catalog {self.identifier} already exists at f{self._path}"
-            )
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-
-        if path is None:
-            catalog = pd.DataFrame(
-                data=None,
-                columns=(
-                    "identifier",
-                    "lookup_type",
-                    "sha1",
-                    "location_type",
-                    "location",
-                    "stimulus_set_identifier",
-                    "class",
-                ),
-            )
-            catalog.to_csv(self._path, index=False)
+        if path_csv:
+            self._path_csv = path_csv
         else:
-            validate_catalog(path)
-            shutil.copy(path, self._path)
+            self._path_csv = HOME / self.identifier / "catalog.csv"
+
+        if not self._path_csv.exists():
+            self._create(path=self._path_csv)
+
+        if path_cache:
+            self._path_cache = path_cache
+        else:
+            self._path_cache = HOME / self.identifier
+
+        if not self._path_cache.exists():
+            self._path_cache.mkdir(parents=True, exist_ok=True)
+
+        validate_catalog(path=self._path_csv)
+
+    def _create(self, path: Path) -> None:
+        """Create a new Catalog.
+
+        :param path: path where the Catalog CSV file should be created
+        """
+        path.parent.mkdir(parents=True, exist_ok=True)
+        catalog = pd.DataFrame(
+            data=None,
+            columns=(
+                "identifier",
+                "lookup_type",
+                "sha1",
+                "location_type",
+                "location",
+                "stimulus_set_identifier",
+                "class",
+            ),
+        )
+        catalog.to_csv(path, index=False)
 
     def _lookup(
         self,
         *,
         identifier: str,
         lookup_type: str,
-    ) -> pd.DataFrame | None:
-        catalog = pd.read_csv(self._path)
+    ) -> pd.DataFrame:
+        """Look up the metadata for a Data Assembly or Stimulus Set in the Catalog.
+
+        :param identifier: identifier of the Data Assembly or Stimulus Set
+        :param lookup_type: 'assembly' or 'stimulus_set', when looking up Data Assemblies or Stimulus Sets respectively
+        :return: metadata corresponding to the Data Assembly or Stimulus Set
+        """
+        catalog = pd.read_csv(self._path_csv)
         filter = (catalog["identifier"] == identifier) & (
             catalog["lookup_type"] == lookup_type
         )
-        result = catalog.loc[filter, :]
+        return catalog.loc[filter, :]
 
-        if len(result) != 0:
-            if lookup_type == "assembly":
-                assert len(result) == 1, (
-                    "The Catalog MUST contain exactly one row corresponding to the Data"
-                    f" Assembly {identifier}"
-                )
-            elif lookup_type == "assembly":
-                assert len(result) == 2, (
-                    "The Catalog MUST contain exactly two rows corresponding to the"
-                    f" Stimulus Set {identifier}"
-                )
-        return result
+    def _append(self, entry: dict[str, str]) -> None:
+        """Append an entry to the Catalog.
 
-    def _append(self, entry: Mapping[str, str]) -> None:
-        catalog = pd.read_csv(self._path)
+        :param entry: a row to be appended to the Catalog CSV file, where keys correspond to column header names
+        """
+        catalog = pd.read_csv(self._path_csv)
         catalog = pd.concat([catalog, pd.DataFrame(entry, index=[len(catalog)])])
-        catalog.to_csv(self._path, index=False)
-
-    def _fetch(self, *, location_type: str, location: str) -> Path:
-        path = self._path.parent / Path(urlparse(location).path).name
-        if not path.exists():
-            handler = get_network_handler(location_type=location_type)
-            handler.download(
-                location=location,
-                filepath=path,
-            )
-        return path
-
-    def _send(
-        self,
-        *,
-        path: Path,
-        identifier: str,
-        lookup_type: str,
-        class_: str,
-        location_type: str,
-        location: str,
-        stimulus_set_identifier: str = "",
-    ) -> None:
-        assert not self._lookup(
-            identifier=identifier, lookup_type=lookup_type
-        ).empty, f"{lookup_type} {identifier} already exists in catalog"
-        sha1 = compute_sha1(path)
-        handler = get_network_handler(location_type=location_type)
-        handler.upload(
-            location=location,
-            filepath=path,
-        )
-        self._append(
-            {
-                "identifier": identifier,
-                "lookup_type": lookup_type,
-                "class": class_,
-                "location_type": location_type,
-                "location": location,
-                "sha1": sha1,
-                "stimulus_set_identifier": stimulus_set_identifier,
-            }
-        )
+        path_temp = self._path_csv.parent / f"{self._path_csv.name}.tmp"
+        catalog.to_csv(path_temp, index=False)
+        validate_catalog(path_temp)
+        catalog.to_csv(self._path_csv)
+        path_temp.unlink()
 
     def load_stimulus_set(
         self,
         *,
         identifier: str,
+        use_cached: bool = True,
         check_integrity: bool = True,
         validate: bool = True,
     ) -> dict[str, Path]:
+        """Load a Stimulus Set from the Catalog.
+
+        :param identifier: _description_
+        :param use_cached: _description_, defaults to True
+        :param check_integrity: _description_, defaults to True
+        :param validate: _description_, defaults to True
+        :return: _description_
+        """
         metadata = self._lookup(identifier=identifier, lookup_type="stimulus_set")
         assert not metadata.empty, f"Stimulus Set {identifier} not found in Catalog"
 
         paths = {}
         for row in metadata.itertuples():
-            path = self._fetch(location_type=row.location_type, location=row.location)
+            path = fetch(
+                path_cache=self._path_cache,
+                location_type=row.location_type,
+                location=row.location,
+                use_cached=use_cached,
+            )
 
             if check_integrity:
                 assert row.sha1 == compute_sha1(
@@ -153,14 +152,18 @@ class Catalog:
         self,
         *,
         identifier: str,
+        use_cached: bool = True,
         check_integrity: bool = True,
         validate: bool = True,
     ) -> Path:
         metadata = self._lookup(identifier=identifier, lookup_type="assembly").to_dict()
         assert not metadata.empty, f"Stimulus Set {identifier} not found in Catalog"
 
-        path = self._fetch(
-            location_type=metadata["location_type"], location=metadata["location"]
+        path = fetch(
+            path_cache=self._path_cache,
+            location_type=metadata["location_type"],
+            location=metadata["location"],
+            use_cached=use_cached,
         )
 
         if check_integrity:
@@ -176,33 +179,36 @@ class Catalog:
     def package_stimulus_set(
         self,
         *,
+        identifier: str,
         path_csv: Path,
         path_zip: Path,
-        identifier: str,
         location_type: str,
         location_csv: str,
         location_zip: str,
         class_csv: str,
         class_zip: str,
     ) -> None:
+        metadata = self._lookup(identifier=identifier, lookup_type="stimulus_set")
+        assert metadata.empty, f"Stimulus Set {identifier} already exists in Catalog"
+
         validate_stimulus_set(path_csv=path_csv, path_zip=path_zip)
 
-        self._send(
-            path=path_csv,
-            identifier=identifier,
-            lookup_type="stimulus_set",
-            class_=class_csv,
-            location_type=location_type,
-            location=location_csv,
-        )
-        self._send(
-            path=path_zip,
-            identifier=identifier,
-            lookup_type="stimulus_set",
-            class_=class_zip,
-            location_type=location_type,
-            location=location_zip,
-        )
+        for path, class_, location in {
+            (path_csv, location_csv, class_csv),
+            (path_zip, location_zip, class_zip),
+        }:
+            send(path=path, location_type=location_type, location=location)
+            self._append(
+                {
+                    "identifier": identifier,
+                    "lookup_type": "stimulus_set",
+                    "class": class_,
+                    "location_type": location_type,
+                    "location": location,
+                    "sha1": compute_sha1(path),
+                    "stimulus_set_identifier": "",
+                }
+            )
 
     def package_data_assembly(
         self,
@@ -213,13 +219,24 @@ class Catalog:
         class_: str,
     ) -> None:
         validate_data_assembly(path=path)
+
         assembly = netCDF4.Dataset(path, "r", format="NETCDF4")
-        self._send(
-            path=path,
-            identifier=assembly.ncattrs()["identifier"],
-            lookup_type="assembly",
-            class_=class_,
-            location_type=location_type,
-            location=location,
-            stimulus_set_identifier=assembly.ncattrs()["stimulus_set_identifier"],
+        identifier = assembly.ncattrs().__dict__["identifier"]
+
+        metadata = self._lookup(identifier=identifier, lookup_type="assembly")
+        assert metadata.empty, f"Data Assembly {identifier} already exists in Catalog"
+
+        send(path=path, location_type=location_type, location=location)
+        self._append(
+            {
+                "identifier": identifier,
+                "lookup_type": "stimulus_set",
+                "class": class_,
+                "location_type": location_type,
+                "location": location,
+                "sha1": compute_sha1(path),
+                "stimulus_set_identifier": assembly.ncattrs().__dict__[
+                    "stimulus_set_identifier"
+                ],
+            }
         )

@@ -20,20 +20,20 @@ class NetworkHandler(ABC):
         super().__init__()
 
     @abstractmethod
-    def upload(self, *, filepath: Path, location: str) -> None:
+    def upload(self, *, local_path: Path, remote_url: str) -> None:
         """Upload a file to the remote.
 
-        :param filepath: local path of the file
-        :param location: remote path of the file
+        :param local_path: local path of the file
+        :param remote_url: remote URL of the file
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def download(self, *, filepath: Path, location: str) -> None:
+    def download(self, *, local_path: Path, remote_url: str) -> None:
         """Download a file from the remote.
 
-        :param filepath: local path of the file
-        :param location: remote path of the file
+        :param local_path: local path of the file
+        :param remote_url: remote URL of the file
         """
         raise NotImplementedError()
 
@@ -41,19 +41,19 @@ class NetworkHandler(ABC):
 class RsyncHandler(NetworkHandler):
     """Uses Rsync to upload and download files to/from a networked server."""
 
-    def upload(self, filepath: Path, location: str) -> None:
+    def upload(self, local_path: Path, remote_url: str) -> None:
         """Upload a file to the remote using Rsync.
 
-        :param filepath: local path of the file
-        :param location: remote path of the file (<server-name>:<remote-path>)
+        :param local_path: local path of the file
+        :param remote_url: remote URL of the file (<server-name>:<remote-path>)
         """
         subprocess.run(
             [
                 "ssh",
-                urlparse(location).scheme,
+                urlparse(remote_url).scheme,
                 "mkdir",
                 "-p",
-                str(Path(urlparse(location).path).parent),
+                str(Path(urlparse(remote_url).path).parent),
             ],
             check=True,
         )
@@ -64,21 +64,21 @@ class RsyncHandler(NetworkHandler):
                 "--recursive",
                 "--relative",
                 "--progress",
-                str(filepath),
-                location,
+                str(local_path),
+                remote_url,
             ],
             check=True,
         )
 
-    def download(self, filepath: Path, location: str) -> None:
+    def download(self, local_path: Path, remote_url: str) -> None:
         """Download a file from the remote using Rsync.
 
-        :param filepath: local path of the file
-        :param location: remote path of the file (<server-name>:<remote-path>)
+        :param local_path: local path of the file
+        :param remote_url: remote URL of the file (<server-name>:<remote-path>)
         """
-        if not filepath.exists():
+        if not local_path.exists():
             subprocess.run(
-                ["rsync", "-vzhW", "--progress", location, str(filepath)],
+                ["rsync", "-vzhW", "--progress", remote_url, str(local_path)],
                 check=True,
             )
 
@@ -86,22 +86,22 @@ class RsyncHandler(NetworkHandler):
 class S3Handler(NetworkHandler):
     """Upload and download files to/from Amazon S3."""
 
-    def upload(self, filepath: Path, location: str) -> None:
+    def upload(self, local_path: Path, remote_url: str) -> None:
         """Upload a file to an S3 bucket.
 
-        :param filepath: local path of the file
-        :param location: remote URL of the file
+        :param local_path: local path of the file
+        :param remote_url: remote URL of the file
         """
         client = boto3.client("s3")
-        client.upload_file(str(filepath), location)
+        client.upload_file(str(local_path), remote_url)
 
-    def download(self, filepath: Path, location: str) -> None:
+    def download(self, local_path: Path, remote_url: str) -> None:
         """Download a file from an S3 bucket.
 
-        :param filepath: local path of the file
-        :param location: remote URL of the file
+        :param local_path: local path of the file
+        :param remote_url: remote URL of the file
         """
-        parsed_url = urlparse(location)
+        parsed_url = urlparse(remote_url)
         split_path = parsed_url.path.lstrip("/").split("/")
 
         if parsed_url.hostname:
@@ -112,11 +112,11 @@ class S3Handler(NetworkHandler):
                 bucket_name = split_path[0]
                 relative_path = os.path.join(*(split_path[1:]))
         else:
-            raise ValueError(f"parsing the URL {location} did not yield any hostname")
+            raise ValueError(f"parsing the URL {remote_url} did not yield any hostname")
 
         try:
             self.download_helper(
-                filepath=filepath,
+                local_path=local_path,
                 bucket_name=bucket_name,
                 relative_path=relative_path,
                 config=None,
@@ -124,7 +124,7 @@ class S3Handler(NetworkHandler):
         except Exception:
             config = Config(signature_version=botocore.UNSIGNED)
             self.download_helper(
-                filepath=filepath,
+                local_path=local_path,
                 bucket_name=bucket_name,
                 relative_path=relative_path,
                 config=config,
@@ -133,21 +133,21 @@ class S3Handler(NetworkHandler):
     def download_helper(
         self,
         *,
-        filepath: Path,
+        local_path: Path,
         bucket_name: str,
         relative_path: str,
         config: Config | None,
     ) -> None:
         """Utility function for downloading a file from S3.
 
-        :param filepath: local path to file
+        :param local_path: local path to file
         :param bucket_name: name of the S3 bucket
         :param relative_path: relative path of the file within the S3 bucket
         :param config: TODO config for Amazon S3
         """
         s3 = boto3.resource("s3", config=config)
         obj = s3.Object(bucket_name, relative_path)
-        obj.download_file(filepath)
+        obj.download_file(local_path)
 
 
 def get_network_handler(location_type: str) -> NetworkHandler:
@@ -163,3 +163,43 @@ def get_network_handler(location_type: str) -> NetworkHandler:
         return S3Handler()
     else:
         raise ValueError(f"location_type {location_type} is unsupported")
+
+
+def fetch(
+    *, path_cache: Path, location_type: str, location: str, use_cached: bool = True
+) -> Path:
+    """Fetch a file from <location> to the local cache directory.
+
+    :param cache: path to the local cache directory
+    :param location_type: method to use to fetch files from the location (e.g. "rsync", "s3")
+    :param location: remote URL of the file
+    :param use_cached: whether to use the local cache
+    :return: local path to the fetched file
+    """
+    path = path_cache / Path(urlparse(location).path).name
+    if (not path.exists()) or (not use_cached):
+        handler = get_network_handler(location_type)
+        handler.download(
+            remote_url=location,
+            local_path=path,
+        )
+    return path
+
+
+def send(
+    *,
+    path: Path,
+    location_type: str,
+    location: str,
+) -> None:
+    """Send a file to <location>.
+
+    :param path: local path to the file
+    :param location_type: method to use to fetch files from the location (e.g. "rsync", "s3")
+    :param location: remote URL of the file
+    """
+    handler = get_network_handler(location_type=location_type)
+    handler.upload(
+        remote_url=location,
+        local_path=path,
+    )

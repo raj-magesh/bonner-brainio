@@ -8,29 +8,15 @@ bonner.brainio.catalog
    :members:
    :private-members:
 
-bonner.brainio.network
-----------------------
+bonner.brainio._network
+-----------------------
 
 .. automodule:: bonner.brainio._network
    :members:
    :private-members:
 
-bonner.brainio.assembly
------------------------
-
-.. automodule:: bonner.brainio._assembly
-   :members:
-   :private-members:
-
-bonner.brainio.stimulus_set
----------------------------
-
-.. automodule:: bonner.brainio._stimulus_set
-   :members:
-   :private-members:
-
-bonner.brainio.utils
---------------------
+bonner.brainio._utils
+---------------------
 
 .. automodule:: bonner.brainio._utils
    :members:

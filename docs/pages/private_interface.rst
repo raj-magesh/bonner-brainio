@@ -4,9 +4,11 @@ Private interface
 bonner.brainio._catalog
 -----------------------
 
-.. automodule:: bonner.brainio._catalog
+.. autoclass:: bonner.brainio._catalog.Catalog
    :members:
    :private-members:
+   :special-members: __init__
+   :noindex:
 
 bonner.brainio._network
 -----------------------

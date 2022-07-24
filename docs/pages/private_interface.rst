@@ -1,8 +1,8 @@
 Private interface
 =================
 
-bonner.brainio.catalog
-----------------------
+bonner.brainio._catalog
+-----------------------
 
 .. automodule:: bonner.brainio._catalog
    :members:

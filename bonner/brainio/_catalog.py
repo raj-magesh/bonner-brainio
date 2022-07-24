@@ -54,57 +54,6 @@ class Catalog:
 
         validate_catalog(path=self._path_csv)
 
-    def _create(self, path: Path) -> None:
-        """Create a new Catalog.
-
-        :param path: path where the Catalog CSV file should be created
-        """
-        path.parent.mkdir(parents=True, exist_ok=True)
-        catalog = pd.DataFrame(
-            data=None,
-            columns=(
-                "identifier",
-                "lookup_type",
-                "sha1",
-                "location_type",
-                "location",
-                "stimulus_set_identifier",
-                "class",
-            ),
-        )
-        catalog.to_csv(path, index=False)
-
-    def _lookup(
-        self,
-        *,
-        identifier: str,
-        lookup_type: str,
-    ) -> pd.DataFrame:
-        """Look up the metadata for a Data Assembly or Stimulus Set in the Catalog.
-
-        :param identifier: identifier of the Data Assembly or Stimulus Set
-        :param lookup_type: 'assembly' or 'stimulus_set', when looking up Data Assemblies or Stimulus Sets respectively
-        :return: metadata corresponding to the Data Assembly or Stimulus Set
-        """
-        catalog = pd.read_csv(self._path_csv)
-        filter = (catalog["identifier"] == identifier) & (
-            catalog["lookup_type"] == lookup_type
-        )
-        return catalog.loc[filter, :]
-
-    def _append(self, entry: dict[str, str]) -> None:
-        """Append an entry to the Catalog.
-
-        :param entry: a row to be appended to the Catalog CSV file, where keys correspond to column header names
-        """
-        catalog = pd.read_csv(self._path_csv)
-        catalog = pd.concat([catalog, pd.DataFrame(entry, index=[len(catalog)])])
-        path_temp = self._path_csv.parent / f"{self._path_csv.name}.tmp"
-        catalog.to_csv(path_temp, index=False)
-        validate_catalog(path_temp)
-        catalog.to_csv(self._path_csv)
-        path_temp.unlink()
-
     def load_stimulus_set(
         self,
         *,
@@ -113,14 +62,6 @@ class Catalog:
         check_integrity: bool = True,
         validate: bool = True,
     ) -> dict[str, Path]:
-        """Load a Stimulus Set from the Catalog.
-
-        :param identifier: _description_
-        :param use_cached: _description_, defaults to True
-        :param check_integrity: _description_, defaults to True
-        :param validate: _description_, defaults to True
-        :return: _description_
-        """
         metadata = self._lookup(identifier=identifier, lookup_type="stimulus_set")
         assert not metadata.empty, f"Stimulus Set {identifier} not found in Catalog"
 
@@ -240,3 +181,54 @@ class Catalog:
                 ],
             }
         )
+
+    def _create(self, path: Path) -> None:
+        """Create a new Catalog.
+
+        :param path: path where the Catalog CSV file should be created
+        """
+        path.parent.mkdir(parents=True, exist_ok=True)
+        catalog = pd.DataFrame(
+            data=None,
+            columns=(
+                "identifier",
+                "lookup_type",
+                "sha1",
+                "location_type",
+                "location",
+                "stimulus_set_identifier",
+                "class",
+            ),
+        )
+        catalog.to_csv(path, index=False)
+
+    def _lookup(
+        self,
+        *,
+        identifier: str,
+        lookup_type: str,
+    ) -> pd.DataFrame:
+        """Look up the metadata for a Data Assembly or Stimulus Set in the Catalog.
+
+        :param identifier: identifier of the Data Assembly or Stimulus Set
+        :param lookup_type: 'assembly' or 'stimulus_set', when looking up Data Assemblies or Stimulus Sets respectively
+        :return: metadata corresponding to the Data Assembly or Stimulus Set
+        """
+        catalog = pd.read_csv(self._path_csv)
+        filter = (catalog["identifier"] == identifier) & (
+            catalog["lookup_type"] == lookup_type
+        )
+        return catalog.loc[filter, :]
+
+    def _append(self, entry: dict[str, str]) -> None:
+        """Append an entry to the Catalog.
+
+        :param entry: a row to be appended to the Catalog CSV file, where keys correspond to column header names
+        """
+        catalog = pd.read_csv(self._path_csv)
+        catalog = pd.concat([catalog, pd.DataFrame(entry, index=[len(catalog)])])
+        path_temp = self._path_csv.parent / f"{self._path_csv.name}.tmp"
+        catalog.to_csv(path_temp, index=False)
+        validate_catalog(path_temp)
+        catalog.to_csv(self._path_csv)
+        path_temp.unlink()

@@ -1,6 +1,6 @@
 """TODO add docstring."""
 
-__all__: list[str] = ["Catalog"]
+__all__: list[str] = []
 
 import os
 import zipfile
@@ -62,6 +62,14 @@ class Catalog:
         check_integrity: bool = True,
         validate: bool = True,
     ) -> dict[str, Path]:
+        """Load a Stimulus Set from the Catalog.
+
+        :param identifier: identifier of the Stimulus Set
+        :param use_cached: whether to use the local cache, defaults to True
+        :param check_integrity: whether to check the SHA1 hashes of the files, defaults to True
+        :param validate: whether to ensure that the Stimulus Set conforms to the BrainIO specification, defaults to True
+        :return: paths to the Stimulus Set CSV file and ZIP archive, with keys "csv" and "zip" respectively
+        """
         metadata = self._lookup(identifier=identifier, lookup_type="stimulus_set")
         assert not metadata.empty, f"Stimulus Set {identifier} not found in Catalog"
 
@@ -97,6 +105,14 @@ class Catalog:
         check_integrity: bool = True,
         validate: bool = True,
     ) -> Path:
+        """Load a Data Assembly from the Catalog.
+
+        :param identifier: identifier of the Data Assembly
+        :param use_cached: whether to use the local cache, defaults to True
+        :param check_integrity: whether to check the SHA1 hashes of the files, defaults to True
+        :param validate: whether to ensure that the Data Assembly conforms to the BrainIO specification, defaults to True
+        :return: path to the Data Assembly netCDF-4 file
+        """
         metadata = self._lookup(identifier=identifier, lookup_type="assembly").to_dict()
         assert not metadata.empty, f"Stimulus Set {identifier} not found in Catalog"
 
@@ -129,6 +145,17 @@ class Catalog:
         class_csv: str,
         class_zip: str,
     ) -> None:
+        """Add a Stimulus Set to the Catalog.
+
+        :param identifier: identifier of the Stimulus Set
+        :param path_csv: path to the Stimulus Set CSV file
+        :param path_zip: path to the Stimulus Set ZIP file
+        :param location_type: location_type of the Stimulus Set
+        :param location_csv: remote URL of the Stimulus Set CSV file
+        :param location_zip: remote URL of the Stimulus Set ZIP archive
+        :param class_csv: class of the Stimulus Set CSV file
+        :param class_zip: class of the Stimulus Set ZIP archive
+        """
         metadata = self._lookup(identifier=identifier, lookup_type="stimulus_set")
         assert metadata.empty, f"Stimulus Set {identifier} already exists in Catalog"
 
@@ -159,6 +186,13 @@ class Catalog:
         location: str,
         class_: str,
     ) -> None:
+        """Add a Data Assembly to the Catalog
+
+        :param path: path to the Data Assembly netCDF-4 file
+        :param location_type: location_type of the Data Assembly
+        :param location: remote URL of the Data Assembly
+        :param class_: class of the Data Assembly
+        """
         validate_data_assembly(path=path)
 
         assembly = netCDF4.Dataset(path, "r", format="NETCDF4")

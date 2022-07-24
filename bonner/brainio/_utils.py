@@ -43,13 +43,27 @@ def validate_catalog(path: Path) -> None:
             " only lowercase alphabets, digits, and underscores"
         )
 
-    # TODO check that the identifier column, stimulus_set_identifier column contains strings
-    # TODO check that the SHA1 column contains valid SHA1 hashes
-    # TODO check that the location column contains valid URLs
-    # TODO check that no Data Assembly is repeated
-    # TODO check that no Stimulus Set is repeated
-    # TODO check that each Stimulus Set has two entries
-    # TODO check that each Data Assembly has two entries
+    for column in {"identifier", "stimulus_set_identifier"}:
+        assert isinstance(
+            catalog.dtypes[column], pd.StringDtype
+        ), f"The column '{column}' MUST have string entries"
+
+    for sha1 in catalog["sha1"]:
+        assert (
+            re.match(r"^[a-fA-F0-9]+$", sha1) and len(sha1) == 40
+        ), f"The SHA1 hash {sha1} is invalid"
+
+    assert (
+        catalog.loc[catalog["lookup_type"] == "assembly"].groupby("identifier").count()
+        == 1
+    ).all(), f"Each Data Assembly MUST have exactly 1 corresponding row in the Catalog"
+    assert (
+        catalog.loc[catalog["lookup_type"] == "stimulus_set"]
+        .groupby("identifier")
+        .count()
+        == 2
+    ).all(), f"Each Stimulus Set MUST have exactly 2 corresponding rows in the Catalog"
+
     # TODO check that the {identifier, stimulus_identifier} columns of a DataAssembly match its internal global attributes
     # TODO validate each Data Assembly and Stimulus Set
 
@@ -57,6 +71,7 @@ def validate_catalog(path: Path) -> None:
         f"The 'sha1' column of the Catalog CSV file {path} MUST contain unique entries"
         " unique"
     )
+
     assert set(catalog["lookup_type"].unique()).issubset(
         {"assembly", "stimulus_set"}
     ), (

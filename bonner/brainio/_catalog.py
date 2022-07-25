@@ -170,7 +170,7 @@ class Catalog:
 
         validate_stimulus_set(path_csv=path_csv, path_zip=path_zip)
 
-        for path, class_, location in {
+        for path, location, class_ in {
             (path_csv, location_csv, class_csv),
             (path_zip, location_zip, class_zip),
         }:

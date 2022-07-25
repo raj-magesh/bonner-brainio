@@ -22,10 +22,14 @@ def validate_catalog(path: Path) -> None:
     :param path: path to the Catalog CSV file
     """
     assert pd.read_csv(
-        path, nrows=1, columns=["column"]
-    ).is_unique, f"The column headers of the Catalog CSV file {path} MUST be unique"
+        path,
+        nrows=1,
+        dtype=str,
+    ).columns.is_unique, (
+        f"The column headers of the Catalog CSV file {path} MUST be unique"
+    )
 
-    catalog = pd.read_csv(path)
+    catalog = pd.read_csv(path, dtype=str)
     required_columns = {
         "sha1",
         "lookup_type",
@@ -46,8 +50,11 @@ def validate_catalog(path: Path) -> None:
             " only lowercase alphabets, digits, and underscores"
         )
 
+    if catalog.empty:
+        return
+
     for column in {"identifier", "stimulus_set_identifier"}:
-        assert isinstance(catalog.dtypes[column], pd.StringDtype), (
+        assert catalog.dtypes[column] == "O", (
             f"The column '{column}' of the Catalog CSV file {path} MUST have string"
             " entries"
         )
@@ -58,7 +65,9 @@ def validate_catalog(path: Path) -> None:
         ), f"The SHA1 hash {sha1} in the Catalog CSV file {path} is invalid"
 
     assert (
-        catalog.loc[catalog["lookup_type"] == "assembly"].groupby("identifier").count()
+        catalog.loc[catalog["lookup_type"] == "assembly"]
+        .groupby("identifier")
+        .count()["sha1"]
         == 1
     ).all(), (
         "Each Data Assembly MUST have exactly 1 corresponding row in the Catalog CSV"
@@ -67,7 +76,7 @@ def validate_catalog(path: Path) -> None:
     assert (
         catalog.loc[catalog["lookup_type"] == "stimulus_set"]
         .groupby("identifier")
-        .count()
+        .count()["sha1"]
         == 2
     ).all(), (
         "Each Stimulus Set MUST have exactly 2 corresponding rows in the Catalog CSV"
@@ -119,9 +128,8 @@ def validate_stimulus_set(*, path_csv: Path, path_zip: Path) -> None:
     :param path_csv: path to the Stimulus Set CSV file
     :param path_zip: path to the Stimulus Set ZIP file
     """
-    column_headers = pd.read_csv(path_csv, nrows=1, columns=["column"])
     assert (
-        column_headers.is_unique
+        pd.read_csv(path_csv, nrows=1).columns.is_unique,
     ), f"The column headers of the Stimulus Set CSV file {path_csv} MUST be unique"
 
     file_csv = pd.read_csv(path_csv)

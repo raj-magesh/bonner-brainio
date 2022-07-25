@@ -5,10 +5,8 @@ Public API
 ----------
 
 .. automodule:: bonner.brainio
-
-.. autoclass:: bonner.brainio.Catalog
-    :special-members: __init__
-    :members:
+   :members:
+   :special-members:
 
 Private API
 -----------

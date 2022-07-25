@@ -17,7 +17,9 @@ from ._utils import (
     validate_stimulus_set,
 )
 
-CACHE_DIRECTORY = Path(os.getenv("BONNER_BRAINIO_CACHE", str(Path.home() / "brainio")))
+BONNER_BRAINIO_CACHE = Path(
+    os.getenv("BONNER_BRAINIO_CACHE", str(Path.home() / ".cache" / "bonner-brainio"))
+)
 
 
 class Catalog:
@@ -46,7 +48,7 @@ class Catalog:
         if csv_file:
             self.csv_file = csv_file
         else:
-            self.csv_file = CACHE_DIRECTORY / self.identifier / "catalog.csv"
+            self.csv_file = BONNER_BRAINIO_CACHE / self.identifier / "catalog.csv"
 
         if not self.csv_file.exists():
             self._create(path=self.csv_file)
@@ -54,7 +56,7 @@ class Catalog:
         if cache_directory:
             self.cache_directory = cache_directory
         else:
-            self.cache_directory = CACHE_DIRECTORY / self.identifier
+            self.cache_directory = BONNER_BRAINIO_CACHE / self.identifier
 
         if not self.cache_directory.exists():
             self.cache_directory.mkdir(parents=True, exist_ok=True)
@@ -224,7 +226,7 @@ class Catalog:
         )
 
     def _create(self, path: Path) -> None:
-        """Create a new Catalog.
+        """Create a new Catalog CSV file.
 
         :param path: path where the Catalog CSV file should be created
         """

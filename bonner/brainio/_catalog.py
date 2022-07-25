@@ -186,6 +186,7 @@ class Catalog:
                     "stimulus_set_identifier": "",
                 }
             )
+        validate_catalog(self.csv_file)
 
     def package_data_assembly(
         self,
@@ -205,7 +206,7 @@ class Catalog:
         validate_data_assembly(path=path)
 
         assembly = netCDF4.Dataset(path, "r", format="NETCDF4")
-        identifier = assembly.ncattrs().__dict__["identifier"]
+        identifier = assembly.__dict__["identifier"]
 
         metadata = self._lookup(identifier=identifier, lookup_type="assembly")
         assert metadata.empty, f"Data Assembly {identifier} already exists in Catalog"
@@ -224,6 +225,7 @@ class Catalog:
                 ],
             }
         )
+        validate_catalog(self.csv_file)
 
     def _create(self, path: Path) -> None:
         """Create a new Catalog CSV file.
@@ -270,8 +272,4 @@ class Catalog:
         """
         catalog = pd.read_csv(self.csv_file)
         catalog = pd.concat([catalog, pd.DataFrame(entry, index=[len(catalog)])])
-        path_temp = self.csv_file.parent / f"{self.csv_file.name}.tmp"
-        catalog.to_csv(path_temp, index=False)
-        validate_catalog(path_temp)
-        catalog.to_csv(self.csv_file)
-        path_temp.unlink()
+        catalog.to_csv(self.csv_file, index=False)

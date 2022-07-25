@@ -107,12 +107,12 @@ def validate_data_assembly(path: Path) -> None:
     assembly = netCDF4.Dataset(path, "r", format="NETCDF4")
 
     for required_attribute in {"identifier", "stimulus_set_identifier"}:
-        assert required_attribute in assembly.ncattrs().__dict__, (
+        assert required_attribute in assembly.ncattrs(), (
             f"'{required_attribute}' MUST be a global attribute of the Data Assembly"
             f" netCDF-4 file {path}"
         )
 
-        assert isinstance(assembly.ncattrs().__dict__[required_attribute], str), (
+        assert isinstance(assembly.__dict__[required_attribute], str), (
             f"The '{required_attribute} global attribute of the Data Assembly netCDF-4"
             f" file {path} MUST be a string"
         )

@@ -215,14 +215,12 @@ class Catalog:
         self._append(
             {
                 "identifier": identifier,
-                "lookup_type": "stimulus_set",
+                "lookup_type": "assembly",
                 "class": class_,
                 "location_type": location_type,
                 "location": location,
                 "sha1": compute_sha1(path),
-                "stimulus_set_identifier": assembly.ncattrs().__dict__[
-                    "stimulus_set_identifier"
-                ],
+                "stimulus_set_identifier": assembly.__dict__["stimulus_set_identifier"],
             }
         )
         validate_catalog(self.csv_file)

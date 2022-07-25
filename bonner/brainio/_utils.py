@@ -14,7 +14,10 @@ import pandas as pd
 def validate_catalog(path: Path) -> None:
     """Validate a BrainIO Catalog.
 
-    Ensures that the Catalog complies with the BrainIO specification.
+    Ensures that the Catalog complies with the BrainIO specification*.
+
+    * Warning: This does NOT check whether the 'identifier' and 'stimulus_set_identifier' columns of a row corresponding to a Data Assembly netCDF-4 file match its global attributes of the same name.
+    * Warning: This does NOT check whether the Data Assemblies and Stimulus Sets stored in the Catalog are themselves valid.
 
     :param path: path to the Catalog CSV file
     """
@@ -44,28 +47,32 @@ def validate_catalog(path: Path) -> None:
         )
 
     for column in {"identifier", "stimulus_set_identifier"}:
-        assert isinstance(
-            catalog.dtypes[column], pd.StringDtype
-        ), f"The column '{column}' MUST have string entries"
+        assert isinstance(catalog.dtypes[column], pd.StringDtype), (
+            f"The column '{column}' of the Catalog CSV file {path} MUST have string"
+            " entries"
+        )
 
     for sha1 in catalog["sha1"]:
         assert (
             re.match(r"^[a-fA-F0-9]+$", sha1) and len(sha1) == 40
-        ), f"The SHA1 hash {sha1} is invalid"
+        ), f"The SHA1 hash {sha1} in the Catalog CSV file {path} is invalid"
 
     assert (
         catalog.loc[catalog["lookup_type"] == "assembly"].groupby("identifier").count()
         == 1
-    ).all(), f"Each Data Assembly MUST have exactly 1 corresponding row in the Catalog"
+    ).all(), (
+        "Each Data Assembly MUST have exactly 1 corresponding row in the Catalog CSV"
+        f" file {path}"
+    )
     assert (
         catalog.loc[catalog["lookup_type"] == "stimulus_set"]
         .groupby("identifier")
         .count()
         == 2
-    ).all(), f"Each Stimulus Set MUST have exactly 2 corresponding rows in the Catalog"
-
-    # TODO check that the {identifier, stimulus_identifier} columns of a DataAssembly match its internal global attributes
-    # TODO validate each Data Assembly and Stimulus Set
+    ).all(), (
+        "Each Stimulus Set MUST have exactly 2 corresponding rows in the Catalog CSV"
+        f" file {path}"
+    )
 
     assert catalog["sha1"].is_unique, (
         f"The 'sha1' column of the Catalog CSV file {path} MUST contain unique entries"
@@ -93,12 +100,12 @@ def validate_data_assembly(path: Path) -> None:
     for required_attribute in {"identifier", "stimulus_set_identifier"}:
         assert required_attribute in assembly.ncattrs().__dict__, (
             f"'{required_attribute}' MUST be a global attribute of the Data Assembly"
-            f" {path}"
+            f" netCDF-4 file {path}"
         )
 
         assert isinstance(assembly.ncattrs().__dict__[required_attribute], str), (
-            f"The '{required_attribute} global attribute of the Data Assembly"
-            f" {path} MUST be a string"
+            f"The '{required_attribute} global attribute of the Data Assembly netCDF-4"
+            f" file {path} MUST be a string"
         )
 
         # TODO ensure number of non-coordinate variables is one

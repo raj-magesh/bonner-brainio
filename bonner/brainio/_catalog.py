@@ -17,7 +17,7 @@ from ._utils import (
     validate_stimulus_set,
 )
 
-HOME = Path(os.getenv("BONNER_BRAINIO_HOME", str(Path.home() / "brainio")))
+CACHE_DIRECTORY = Path(os.getenv("BONNER_BRAINIO_CACHE", str(Path.home() / "brainio")))
 
 
 class Catalog:
@@ -25,34 +25,41 @@ class Catalog:
         self,
         identifier: str,
         *,
-        path_csv: Path | None = None,
-        path_cache: Path | None = None,
+        csv_file: Path | None = None,
+        cache_directory: Path | None = None,
     ) -> None:
         """Initialize a Catalog.
 
         :param identifier: identifier of the Catalog
-        :param path_csv: path to the (potentially existing) Catalog CSV file, defaults to $BONNER_BRAINIO_HOME/<identifier>/catalog.csv
-        :param path_cache: directory to use as a local file cache, defaults to $BONNER_BRAINIO_HOME/<identifier>
+        :param csv_file: path to the (potentially existing) Catalog CSV file
+        :param cache_directory: directory to use as a local file cache
         """
         self.identifier = identifier
+        """Identifier of the Catalog."""
 
-        if path_csv:
-            self._path_csv = path_csv
+        self.csv_file: Path
+        """Path to the Catalog CSV file, defaults to $BONNER_BRAINIO_CACHE/<identifier>/catalog.csv."""
+
+        self.cache_directory: Path
+        """Local cache directory for files fetched from the Catalog, defaults to $BONNER_BRAINIO_CACHE/<identifier>."""
+
+        if csv_file:
+            self.csv_file = csv_file
         else:
-            self._path_csv = HOME / self.identifier / "catalog.csv"
+            self.csv_file = CACHE_DIRECTORY / self.identifier / "catalog.csv"
 
-        if not self._path_csv.exists():
-            self._create(path=self._path_csv)
+        if not self.csv_file.exists():
+            self._create(path=self.csv_file)
 
-        if path_cache:
-            self._path_cache = path_cache
+        if cache_directory:
+            self.cache_directory = cache_directory
         else:
-            self._path_cache = HOME / self.identifier
+            self.cache_directory = CACHE_DIRECTORY / self.identifier
 
-        if not self._path_cache.exists():
-            self._path_cache.mkdir(parents=True, exist_ok=True)
+        if not self.cache_directory.exists():
+            self.cache_directory.mkdir(parents=True, exist_ok=True)
 
-        validate_catalog(path=self._path_csv)
+        validate_catalog(path=self.csv_file)
 
     def load_stimulus_set(
         self,
@@ -76,7 +83,7 @@ class Catalog:
         paths = {}
         for row in metadata.itertuples():
             path = fetch(
-                path_cache=self._path_cache,
+                path_cache=self.cache_directory,
                 location_type=row.location_type,
                 location=row.location,
                 use_cached=use_cached,
@@ -117,7 +124,7 @@ class Catalog:
         assert not metadata.empty, f"Stimulus Set {identifier} not found in Catalog"
 
         path = fetch(
-            path_cache=self._path_cache,
+            path_cache=self.cache_directory,
             location_type=metadata["location_type"],
             location=metadata["location"],
             use_cached=use_cached,
@@ -186,7 +193,7 @@ class Catalog:
         location: str,
         class_: str,
     ) -> None:
-        """Add a Data Assembly to the Catalog
+        """Add a Data Assembly to the Catalog.
 
         :param path: path to the Data Assembly netCDF-4 file
         :param location_type: location_type of the Data Assembly
@@ -248,7 +255,7 @@ class Catalog:
         :param lookup_type: 'assembly' or 'stimulus_set', when looking up Data Assemblies or Stimulus Sets respectively
         :return: metadata corresponding to the Data Assembly or Stimulus Set
         """
-        catalog = pd.read_csv(self._path_csv)
+        catalog = pd.read_csv(self.csv_file)
         filter = (catalog["identifier"] == identifier) & (
             catalog["lookup_type"] == lookup_type
         )
@@ -259,10 +266,10 @@ class Catalog:
 
         :param entry: a row to be appended to the Catalog CSV file, where keys correspond to column header names
         """
-        catalog = pd.read_csv(self._path_csv)
+        catalog = pd.read_csv(self.csv_file)
         catalog = pd.concat([catalog, pd.DataFrame(entry, index=[len(catalog)])])
-        path_temp = self._path_csv.parent / f"{self._path_csv.name}.tmp"
+        path_temp = self.csv_file.parent / f"{self.csv_file.name}.tmp"
         catalog.to_csv(path_temp, index=False)
         validate_catalog(path_temp)
-        catalog.to_csv(self._path_csv)
+        catalog.to_csv(self.csv_file)
         path_temp.unlink()

@@ -1,4 +1,4 @@
 Environment variables
 =====================
 
-* BONNER_BRAINIO_HOME
+* BONNER_BRAINIO_CACHE

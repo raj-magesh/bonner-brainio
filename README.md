@@ -6,19 +6,9 @@ This is an implementation of the [BrainIO specification](https://github.com/brai
 
 `pip install git+https://github.com/BonnerLab/bonner-brainio`
 
-## API
-
-`bonner.brainio` exposes the following public functions:
-
-- `create_catalog`: creates a new catalog
-- `import_catalog`: imports an existing catalog from a file
-- `fetch`: fetches an item from a catalog
-- `package_stimulus_set`: packages a stimulus set given its .csv and .zip files
-- `package_assembly`: packages an assembly given its netCDF4 file
-
 ## Environment variables
 
-All Bonner-BrainIO data will be stored at the path specified by `BONNER_BRAINIO_HOME`.
+All Bonner-BrainIO data will be stored at the path specified by `BONNER_BRAINIO_CACHE`.
 
 ## Dependencies
 
@@ -28,9 +18,9 @@ All Bonner-BrainIO data will be stored at the path specified by `BONNER_BRAINIO_
 
 ## File organization
 
-- Catalogs are stored at `$BONNER_BRAINIO_HOME/<catalog-name>/catalog.csv`
-- When loading assemblies and stimulus sets, the files are downloaded to `$BONNER_BRAINIO_HOME/<catalog-name>/`
-- When packaging assemblies and stimulus sets using the convenience functions, the files are first placed in `$BONNER_BRAINIO_HOME/<catalog-name>/` before being pushed to the specified remote location
+- Catalogs are stored at `$BONNER_BRAINIO_CACHE/<catalog-identifier>/catalog.csv`
+- When loading assemblies and stimulus sets, the files are downloaded to `$BONNER_BRAINIO_CACHE/<catalog-identifier>/`
+- When packaging assemblies and stimulus sets using the convenience functions, the files are first placed in `$BONNER_BRAINIO_CACHE/<catalog-identifier>/` before being pushed to the specified remote location
 
 ## Things to do
 

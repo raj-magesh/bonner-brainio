@@ -32,6 +32,7 @@ dependencies = [
     "boto3",
     "pandas",
     "netCDF4",
+    "xarray",
 ]
 dynamic = ["version"]
 

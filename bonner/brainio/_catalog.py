@@ -6,8 +6,8 @@ import os
 import zipfile
 from pathlib import Path
 
-import netCDF4
 import pandas as pd
+import xarray as xr
 
 from ._network import fetch, send
 from ._utils import (
@@ -205,8 +205,8 @@ class Catalog:
         """
         validate_data_assembly(path=path)
 
-        assembly = netCDF4.Dataset(path, "r", format="NETCDF4")
-        identifier = assembly.__dict__["identifier"]
+        assembly = xr.open_dataset(path)
+        identifier = assembly.attrs["identifier"]
 
         metadata = self._lookup(identifier=identifier, lookup_type="assembly")
         assert metadata.empty, f"Data Assembly {identifier} already exists in Catalog"

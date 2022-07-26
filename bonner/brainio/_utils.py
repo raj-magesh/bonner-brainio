@@ -7,8 +7,8 @@ import re
 import zipfile
 from pathlib import Path
 
-import netCDF4
 import pandas as pd
+import xarray as xr
 
 
 def validate_catalog(path: Path) -> None:
@@ -104,20 +104,23 @@ def validate_data_assembly(path: Path) -> None:
     :param path: path to the Data Assembly netCDF-4 file
     """
 
-    assembly = netCDF4.Dataset(path, "r", format="NETCDF4")
+    assembly = xr.open_dataset(path)
 
     for required_attribute in {"identifier", "stimulus_set_identifier"}:
-        assert required_attribute in assembly.ncattrs(), (
+        assert required_attribute in assembly.attrs, (
             f"'{required_attribute}' MUST be a global attribute of the Data Assembly"
             f" netCDF-4 file {path}"
         )
 
-        assert isinstance(assembly.__dict__[required_attribute], str), (
+        assert isinstance(assembly.attrs[required_attribute], str), (
             f"The '{required_attribute} global attribute of the Data Assembly netCDF-4"
             f" file {path} MUST be a string"
         )
 
-        # TODO ensure number of non-coordinate variables is one
+    assert len(assembly.data_vars) == 1, (
+        "There MUST be only one non-coordinate variable in the Data Assembly netCDF-4"
+        f" file {path}"
+    )
 
 
 def validate_stimulus_set(*, path_csv: Path, path_zip: Path) -> None:

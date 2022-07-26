@@ -212,6 +212,7 @@ class Catalog:
         assert metadata.empty, f"Data Assembly {identifier} already exists in Catalog"
 
         send(path=path, location_type=location_type, location=location)
+
         self._append(
             {
                 "identifier": identifier,
@@ -257,11 +258,14 @@ class Catalog:
         :param lookup_type: 'assembly' or 'stimulus_set', when looking up Data Assemblies or Stimulus Sets respectively
         :return: metadata corresponding to the Data Assembly or Stimulus Set
         """
+        print("reached1")
         catalog = pd.read_csv(self.csv_file)
-        filter = (catalog["identifier"] == identifier) & (
+        print("reached2")
+        filter_ = (catalog["identifier"] == identifier) & (
             catalog["lookup_type"] == lookup_type
         )
-        return catalog.loc[filter, :]
+        print("reached3")
+        return catalog.loc[filter_, :]
 
     def _append(self, entry: dict[str, str]) -> None:
         """Append an entry to the Catalog.

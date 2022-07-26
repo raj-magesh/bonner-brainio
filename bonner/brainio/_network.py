@@ -61,8 +61,6 @@ class RsyncHandler(NetworkHandler):
             [
                 "rsync",
                 "-vzhW",
-                "--recursive",
-                "--relative",
                 "--progress",
                 str(local_path),
                 remote_url,

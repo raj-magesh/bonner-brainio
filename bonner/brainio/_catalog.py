@@ -122,18 +122,18 @@ class Catalog:
         :param validate: whether to ensure that the Data Assembly conforms to the BrainIO specification, defaults to True
         :return: path to the Data Assembly netCDF-4 file
         """
-        metadata = self._lookup(identifier=identifier, lookup_type="assembly").to_dict()
+        metadata = self._lookup(identifier=identifier, lookup_type="assembly")
         assert not metadata.empty, f"Stimulus Set {identifier} not found in Catalog"
 
         path = fetch(
             path_cache=self.cache_directory,
-            location_type=metadata["location_type"],
-            location=metadata["location"],
+            location_type=metadata["location_type"].item(),
+            location=metadata["location"].item(),
             use_cached=use_cached,
         )
 
         if check_integrity:
-            assert metadata["sha1"] == compute_sha1(
+            assert metadata["sha1"].item() == compute_sha1(
                 path
             ), f"SHA1 hash from the Catalog does not match that of {path}"
 
@@ -258,13 +258,10 @@ class Catalog:
         :param lookup_type: 'assembly' or 'stimulus_set', when looking up Data Assemblies or Stimulus Sets respectively
         :return: metadata corresponding to the Data Assembly or Stimulus Set
         """
-        print("reached1")
         catalog = pd.read_csv(self.csv_file)
-        print("reached2")
         filter_ = (catalog["identifier"] == identifier) & (
             catalog["lookup_type"] == lookup_type
         )
-        print("reached3")
         return catalog.loc[filter_, :]
 
     def _append(self, entry: dict[str, str]) -> None:

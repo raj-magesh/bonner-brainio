@@ -60,7 +60,7 @@ class RsyncHandler(NetworkHandler):
         subprocess.run(
             [
                 "rsync",
-                "-vzhW",
+                "-vvczhW",
                 "--progress",
                 str(local_path),
                 remote_url,
